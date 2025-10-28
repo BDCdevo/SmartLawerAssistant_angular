@@ -1,0 +1,300 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>لوحة التحكم</h1>
+      <p>مرحباً بك في نظام إدارة المكتب القانوني</p>
+    </div>
+    <button class="refresh-btn" (click)="loadDashboardData()" [disabled]="loading()">
+      <span class="refresh-icon">🔄</span>
+      تحديث البيانات
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-overlay">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <p>جاري تحميل البيانات...</p>
+      </div>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      <span class="error-icon">⚠️</span>
+      <div class="error-content">
+        <h3>حدث خطأ</h3>
+        <p>{{ error() }}</p>
+      </div>
+      <button class="retry-btn" (click)="loadDashboardData()">إعادة المحاولة</button>
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    <!-- Key Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card primary">
+        <div class="stat-header">
+          <div class="stat-icon">⚖️</div>
+          <span class="stat-badge">+12%</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value">{{ stats().totalCases }}</h3>
+          <p class="stat-label">إجمالي القضايا</p>
+          <div class="stat-footer">
+            <span class="stat-detail">{{ stats().activeCases }} نشطة</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card success">
+        <div class="stat-header">
+          <div class="stat-icon">✅</div>
+          <span class="stat-badge success">+8%</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value">{{ stats().closedCases }}</h3>
+          <p class="stat-label">القضايا المغلقة</p>
+          <div class="stat-footer">
+            <span class="stat-detail">{{ stats().pendingCases }} معلقة</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card info">
+        <div class="stat-header">
+          <div class="stat-icon">👥</div>
+          <span class="stat-badge info">+5%</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value">{{ stats().totalClients }}</h3>
+          <p class="stat-label">إجمالي العملاء</p>
+          <div class="stat-footer">
+            <span class="stat-detail">نشط هذا الشهر</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card warning">
+        <div class="stat-header">
+          <div class="stat-icon">📅</div>
+          <span class="stat-badge warning">قريباً</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value">{{ stats().upcomingHearings }}</h3>
+          <p class="stat-label">الجلسات القادمة</p>
+          <div class="stat-footer">
+            <span class="stat-detail">خلال 7 أيام</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card document">
+        <div class="stat-header">
+          <div class="stat-icon">📄</div>
+          <span class="stat-badge">جديد</span>
+        </div>
+        <div class="stat-body">
+          <h3 class="stat-value">{{ stats().totalDocuments }}</h3>
+          <p class="stat-label">المستندات</p>
+          <div class="stat-footer">
+            <span class="stat-detail">في النظام</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts and Statistics Section -->
+    <div class="charts-grid">
+      <!-- Cases by Status -->
+      <div class="chart-card">
+        <div class="card-header">
+          <h2>توزيع القضايا حسب الحالة</h2>
+          <button class="icon-btn">📊</button>
+        </div>
+        <div class="card-content">
+          @if (stats().casesByStatus && stats().casesByStatus.length > 0) {
+            <div class="status-distribution">
+              @for (item of stats().casesByStatus; track item.status) {
+                <div class="status-item">
+                  <div class="status-bar-container">
+                    <div class="status-bar-header">
+                      <span class="status-name">{{ getStatusLabel(item.status) }}</span>
+                      <span class="status-count">{{ item.count }}</span>
+                    </div>
+                    <div class="status-bar">
+                      <div
+                        class="status-bar-fill"
+                        [style.width.%]="item.percentage"
+                        [style.background-color]="getStatusColor(item.status)">
+                      </div>
+                    </div>
+                    <span class="status-percentage">{{ item.percentage }}%</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-chart">
+              <p>لا توجد بيانات متاحة</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Cases by Priority -->
+      <div class="chart-card">
+        <div class="card-header">
+          <h2>توزيع القضايا حسب الأولوية</h2>
+          <button class="icon-btn">🎯</button>
+        </div>
+        <div class="card-content">
+          @if (stats().casesByPriority && stats().casesByPriority.length > 0) {
+            <div class="priority-grid">
+              @for (item of stats().casesByPriority; track item.priority) {
+                <div class="priority-card" [style.border-color]="getPriorityColor(item.priority)">
+                  <div class="priority-header">
+                    <h4>{{ getPriorityLabel(item.priority) }}</h4>
+                  </div>
+                  <div class="priority-value" [style.color]="getPriorityColor(item.priority)">
+                    {{ item.count }}
+                  </div>
+                  <div class="priority-percentage">
+                    {{ item.percentage }}%
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-chart">
+              <p>لا توجد بيانات متاحة</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities and Quick Actions -->
+    <div class="content-grid">
+      <!-- Recent Activities -->
+      <div class="activity-card">
+        <div class="card-header">
+          <h2>الأنشطة الأخيرة</h2>
+          <a routerLink="/activity-log" class="view-all-link">عرض الكل →</a>
+        </div>
+        <div class="card-content">
+          @if (recentActivities() && recentActivities().length > 0) {
+            <div class="activities-timeline">
+              @for (activity of recentActivities(); track activity.id) {
+                <div class="activity-item">
+                  <div class="activity-icon-wrapper">
+                    <span class="activity-icon">{{ getActivityIcon(activity.type) }}</span>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-header">
+                      <span class="activity-type">{{ getActivityTypeLabel(activity.type) }}</span>
+                      <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
+                    </div>
+                    <p class="activity-description">{{ activity.description }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <span class="empty-icon">📭</span>
+              <p>لا توجد أنشطة حديثة</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions Panel -->
+      <div class="actions-card">
+        <div class="card-header">
+          <h2>إجراءات سريعة</h2>
+        </div>
+        <div class="card-content">
+          <div class="quick-actions-grid">
+            <a routerLink="/cases/new" class="action-card">
+              <div class="action-icon primary">⚖️</div>
+              <h3>قضية جديدة</h3>
+              <p>إضافة قضية جديدة للنظام</p>
+            </a>
+
+            <a routerLink="/clients/new" class="action-card">
+              <div class="action-icon success">👤</div>
+              <h3>عميل جديد</h3>
+              <p>تسجيل عميل جديد</p>
+            </a>
+
+            <a routerLink="/documents/upload" class="action-card">
+              <div class="action-icon info">📄</div>
+              <h3>رفع مستند</h3>
+              <p>إضافة مستند جديد</p>
+            </a>
+
+            <a routerLink="/ai-assistant" class="action-card">
+              <div class="action-icon warning">🤖</div>
+              <h3>المساعد الذكي</h3>
+              <p>استشارة قانونية ذكية</p>
+            </a>
+
+            <a routerLink="/appointments/new" class="action-card">
+              <div class="action-icon document">📅</div>
+              <h3>حجز موعد</h3>
+              <p>جدولة موعد جديد</p>
+            </a>
+
+            <a routerLink="/reports" class="action-card">
+              <div class="action-icon primary">📊</div>
+              <h3>التقارير</h3>
+              <p>عرض التقارير التفصيلية</p>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Statistics -->
+    @if (stats().monthlyStats && stats().monthlyStats.length > 0) {
+      <div class="monthly-stats-card">
+        <div class="card-header">
+          <h2>الإحصائيات الشهرية</h2>
+          <button class="export-btn">
+            <span>📥</span>
+            تصدير
+          </button>
+        </div>
+        <div class="card-content">
+          <div class="monthly-stats-grid">
+            @for (stat of stats().monthlyStats; track stat.month + stat.year) {
+              <div class="monthly-stat-item">
+                <div class="month-header">
+                  <h4>{{ stat.month }} {{ stat.year }}</h4>
+                </div>
+                <div class="month-stats">
+                  <div class="month-stat">
+                    <span class="stat-label">قضايا جديدة</span>
+                    <span class="stat-value">{{ stat.totalCases }}</span>
+                  </div>
+                  <div class="month-stat">
+                    <span class="stat-label">قضايا مغلقة</span>
+                    <span class="stat-value success">{{ stat.closedCases }}</span>
+                  </div>
+                  @if (stat.revenue) {
+                    <div class="month-stat">
+                      <span class="stat-label">الإيرادات</span>
+                      <span class="stat-value primary">{{ stat.revenue }} ج.م</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,60 @@
+<div class="cases-container">
+  <div class="cases-header">
+    <h1>القضايا</h1>
+    <a routerLink="/cases/new" class="btn-primary">+ قضية جديدة</a>
+  </div>
+
+  <div class="filters">
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      (input)="onSearch()"
+      placeholder="بحث في القضايا..."
+      class="search-input"
+    />
+
+    <select [(ngModel)]="filterStatus" (change)="onFilterChange()" class="filter-select">
+      <option value="">كل الحالات</option>
+      <option value="open">مفتوحة</option>
+      <option value="in_progress">قيد التنفيذ</option>
+      <option value="pending">معلقة</option>
+      <option value="closed">مغلقة</option>
+    </select>
+
+    <select [(ngModel)]="filterPriority" (change)="onFilterChange()" class="filter-select">
+      <option value="">كل الأولويات</option>
+      <option value="low">منخفضة</option>
+      <option value="medium">متوسطة</option>
+      <option value="high">عالية</option>
+      <option value="urgent">عاجلة</option>
+    </select>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>جاري تحميل القضايا...</p>
+    </div>
+  } @else if (cases().length === 0) {
+    <div class="empty-state">
+      <p>لا توجد قضايا</p>
+      <a routerLink="/cases/new" class="btn-primary">إضافة قضية جديدة</a>
+    </div>
+  } @else {
+    <div class="cases-grid">
+      @for (case of cases(); track case.id) {
+        <div class="case-card" [routerLink]="['/cases', case.id]">
+          <div class="case-header">
+            <h3>{{ case.title }}</h3>
+            <span class="case-number">{{ case.caseNumber }}</span>
+          </div>
+          <p class="case-description">{{ case.description }}</p>
+          <div class="case-meta">
+            <span class="badge status-badge">{{ case.status }}</span>
+            <span class="badge priority-badge">{{ case.priority }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

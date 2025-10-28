@@ -1,0 +1,54 @@
+<div class="ai-assistant-container">
+  <div class="chat-header">
+    <h1>🤖 المساعد القانوني الذكي</h1>
+    <p>اطرح أسئلتك القانونية واحصل على مساعدة فورية</p>
+  </div>
+
+  <div class="chat-container">
+    <div class="messages-container">
+      @for (message of messages(); track message.id) {
+        <div class="message" [class.user-message]="message.role === 'user'" [class.assistant-message]="message.role === 'assistant'">
+          <div class="message-avatar">
+            {{ message.role === 'user' ? '👤' : '🤖' }}
+          </div>
+          <div class="message-content">
+            <div class="message-text">{{ message.content }}</div>
+            <div class="message-time">
+              {{ message.timestamp | date:'short' }}
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="message assistant-message">
+          <div class="message-avatar">🤖</div>
+          <div class="message-content">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="input-container">
+      <textarea
+        [(ngModel)]="newMessage"
+        (keydown.control.enter)="sendMessage()"
+        placeholder="اكتب رسالتك هنا... (Ctrl + Enter للإرسال)"
+        rows="3"
+        class="message-input"
+      ></textarea>
+      <button
+        (click)="sendMessage()"
+        [disabled]="!newMessage().trim() || loading()"
+        class="send-button"
+      >
+        📤 إرسال
+      </button>
+    </div>
+  </div>
+</div>

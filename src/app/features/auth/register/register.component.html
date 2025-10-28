@@ -1,0 +1,183 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1>إنشاء حساب جديد</h1>
+      <p>انضم إلى Smart Lawyer Portal</p>
+    </div>
+
+    @if (error()) {
+      <div class="alert alert-error">
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">الاسم الأول</label>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="أدخل الاسم الأول"
+            [class.invalid]="firstName?.invalid && firstName?.touched"
+          />
+          @if (firstName?.invalid && firstName?.touched) {
+            <span class="error-message">الاسم الأول مطلوب</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">اسم العائلة</label>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="أدخل اسم العائلة"
+            [class.invalid]="lastName?.invalid && lastName?.touched"
+          />
+          @if (lastName?.invalid && lastName?.touched) {
+            <span class="error-message">اسم العائلة مطلوب</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">البريد الإلكتروني</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="example@email.com"
+          [class.invalid]="email?.invalid && email?.touched"
+        />
+        @if (email?.invalid && email?.touched) {
+          <span class="error-message">
+            @if (email?.errors?.['required']) {
+              البريد الإلكتروني مطلوب
+            }
+            @if (email?.errors?.['email']) {
+              البريد الإلكتروني غير صحيح
+            }
+          </span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="phone">رقم الهاتف</label>
+        <input
+          type="tel"
+          id="phone"
+          formControlName="phone"
+          placeholder="+20 123 456 7890"
+          [class.invalid]="phone?.invalid && phone?.touched"
+        />
+        @if (phone?.invalid && phone?.touched) {
+          <span class="error-message">رقم الهاتف مطلوب</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="role">نوع الحساب</label>
+        <select
+          id="role"
+          formControlName="role"
+          [class.invalid]="role?.invalid && role?.touched"
+        >
+          @for (roleOption of roles; track roleOption.value) {
+            <option [value]="roleOption.value">{{ roleOption.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <div class="password-input">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              placeholder="********"
+              [class.invalid]="password?.invalid && password?.touched"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="togglePasswordVisibility('password')"
+            >
+              {{ showPassword() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          @if (password?.invalid && password?.touched) {
+            <span class="error-message">
+              @if (password?.errors?.['required']) {
+                كلمة المرور مطلوبة
+              }
+              @if (password?.errors?.['minlength']) {
+                6 أحرف على الأقل
+              }
+            </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">تأكيد كلمة المرور</label>
+          <div class="password-input">
+            <input
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              placeholder="********"
+              [class.invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="togglePasswordVisibility('confirmPassword')"
+            >
+              {{ showConfirmPassword() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+          @if (confirmPassword?.invalid && confirmPassword?.touched) {
+            <span class="error-message">
+              @if (confirmPassword?.errors?.['required']) {
+                تأكيد كلمة المرور مطلوب
+              }
+              @if (confirmPassword?.errors?.['passwordMismatch']) {
+                كلمات المرور غير متطابقة
+              }
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" formControlName="acceptTerms" />
+          <span>أوافق على <a href="#" target="_blank">الشروط والأحكام</a></span>
+        </label>
+        @if (acceptTerms?.invalid && acceptTerms?.touched) {
+          <span class="error-message">يجب الموافقة على الشروط والأحكام</span>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner"></span>
+          جاري إنشاء الحساب...
+        } @else {
+          إنشاء حساب
+        }
+      </button>
+    </form>
+
+    <div class="register-footer">
+      <p>لديك حساب بالفعل؟ <a routerLink="/auth/login">تسجيل الدخول</a></p>
+    </div>
+  </div>
+</div>
