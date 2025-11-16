@@ -1,45 +1,109 @@
-import { Component, inject, signal, HostListener } from '@angular/core';
+import { Component, inject, signal, HostListener, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { User } from '../../core/models';
+import { SignalRService } from '../../core/services/signalr.service';
+import { RbacService } from '../../core/services/rbac.service';
+import { ThemeService } from '../../core/services/theme.service';
+import { User, UserRole } from '../../core/models';
+import { GlobalLoadingComponent } from '../../shared/components/global-loading/global-loading.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, GlobalLoadingComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private signalRService = inject(SignalRService);
+  private rbacService = inject(RbacService);
+  public themeService = inject(ThemeService);
 
   currentUser = signal<User | null>(null);
   sidebarOpen = signal(false);
   userMenuOpen = signal(false);
   isMobile = signal(false);
 
-  menuItems = [
-    { icon: '📊', label: 'لوحة التحكم', route: '/dashboard' },
-    { icon: '⚖️', label: 'القضايا', route: '/cases' },
-    { icon: '👥', label: 'العملاء', route: '/clients' },
-    { icon: '📄', label: 'المستندات', route: '/documents' },
-    { icon: '🤖', label: 'المساعد الذكي', route: '/ai-assistant' },
-    { icon: '📅', label: 'المواعيد', route: '/appointments' },
-    { icon: '📈', label: 'التقارير', route: '/reports' }
+  // Logo path - using same logo for both themes
+  logoPath = 'logo.png';
+
+  // All possible menu items with their required roles
+  private allMenuItems = [
+    { icon: '📊', label: 'لوحة التحكم', route: '/dashboard', roles: ['all'] },
+    { icon: '⚖️', label: 'القضايا', route: '/cases', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER, UserRole.ASSISTANT] },
+    { icon: '👥', label: 'العملاء', route: '/clients', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER, UserRole.ASSISTANT] },
+    { icon: '📄', label: 'المستندات', route: '/documents', roles: ['all'] },
+    { icon: '🏛️', label: 'المحاكم', route: '/courts', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER] },
+    { icon: '⚖️', label: 'أنواع المحاكم', route: '/court-types', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER] },
+    { icon: '📅', label: 'الجلسات', route: '/sessions', roles: ['all'] },
+    { icon: '🔍', label: 'تحليل القضايا AI', route: '/ai-case-analysis', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER] },
+    { icon: '💬', label: 'الشات القانوني', route: '/legal-chat', roles: ['all'] },
+    { icon: '⏰', label: 'المواعيد', route: '/appointments', roles: ['all'] },
+    { icon: '📈', label: 'التقارير', route: '/reports', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN] },
+    { icon: '👨‍⚖️', label: 'تعيينات القضايا', route: '/case-assignments', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.LAWYER] },
+    { icon: '🤖', label: 'إدارة نماذج AI', route: '/ai-model-settings', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN] },
+    { icon: '🌍', label: 'الجنسيات', route: '/nationalities', roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN] }
   ];
 
-  constructor() {
+  // Computed signal that filters menu items based on user role
+  menuItems = computed(() => {
+    const user = this.currentUser();
+    if (!user) return [];
+
+    return this.allMenuItems.filter(item => {
+      // If roles include 'all', everyone can see it
+      if (item.roles.includes('all')) return true;
+
+      // Check if user's role is in the allowed roles
+      return item.roles.includes(user.role);
+    });
+  });
+
+  ngOnInit() {
+    // Subscribe to current user
     this.authService.currentUser$.subscribe(user => {
       this.currentUser.set(user);
+
+      // Initialize roles from backend when user logs in
+      if (user) {
+        console.log('👤 User logged in, initializing RBAC...');
+        this.rbacService.initializeRoles().subscribe({
+          next: (response) => {
+            console.log('✅ RBAC initialized:', response);
+          },
+          error: (err) => {
+            console.warn('⚠️ RBAC initialization failed (using fallback):', err);
+          }
+        });
+
+        // Start SignalR connection
+        this.signalRService.startConnection();
+      }
     });
+
     this.checkScreenSize();
+  }
+
+  ngOnDestroy() {
+    // Stop SignalR connection when component is destroyed
+    this.signalRService.stopConnection();
   }
 
   @HostListener('window:resize')
   onResize() {
     this.checkScreenSize();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    // إغلاق user menu عند الضغط خارجه
+    if (this.userMenuOpen() && !target.closest('.user-menu-wrap')) {
+      this.userMenuOpen.set(false);
+    }
   }
 
   private checkScreenSize(): void {
@@ -59,6 +123,14 @@ export class MainLayoutComponent {
   }
 
   logout(): void {
+    // Stop SignalR connection before logout
+    console.log('🚪 User initiated logout');
+    this.signalRService.stopConnection();
+
+    // Close user menu
+    this.userMenuOpen.set(false);
+
+    // Perform logout
     this.authService.logout();
   }
 
@@ -101,7 +173,7 @@ export class MainLayoutComponent {
       'superadmin': 'مدير عام',
       'admin': 'مدير النظام',
       'lawyer': 'محامي',
-      'client': 'عميل',
+      'viewer': 'مشاهد',
       'assistant': 'مساعد'
     };
 

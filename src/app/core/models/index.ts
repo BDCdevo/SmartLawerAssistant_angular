@@ -3,3 +3,8 @@ export * from './case.model';
 export * from './client.model';
 export * from './document.model';
 export * from './ai-chat.model';
+export * from './ai-case-analysis.model';
+export * from './nationality.model';
+export * from './rbac.model';
+export * from './case-assignment.model';
+export * from './court-type.model';

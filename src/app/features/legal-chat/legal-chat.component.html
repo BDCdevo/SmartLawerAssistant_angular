@@ -1,0 +1,145 @@
+<div class="legal-chat-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-content">
+      <h2>الشات القانوني</h2>
+      <p class="subtitle">اسأل أسئلة قانونية واحصل على إجابات فورية</p>
+    </div>
+
+    <div class="header-actions">
+      <!-- AI Model Selector -->
+      @if (availableModels().length > 0) {
+        <div class="model-selector">
+          <label for="chatModelSelect">النموذج:</label>
+          <ng-select
+            [items]="availableModels()"
+            bindLabel="name"
+            bindValue="id"
+            [(ngModel)]="selectedModelForChange"
+            (ngModelChange)="changeDefaultModel()"
+            placeholder="اختر النموذج"
+            [searchable]="true"
+            [clearable]="false"
+            class="model-select ng-select-custom"
+          >
+          </ng-select>
+        </div>
+      }
+
+      <button
+        class="clear-btn"
+        (click)="clearChat()"
+        [disabled]="messages().length === 0"
+        title="مسح المحادثة">
+        <i class="bi bi-trash"></i>
+        مسح
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-warning" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Chat Messages -->
+  <div class="chat-messages">
+    @if (messages().length === 0) {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <i class="bi bi-chat-dots"></i>
+        <h3>ابدأ محادثة قانونية</h3>
+        <p>اسأل أي سؤال قانوني وسيتم الرد عليك فوراً</p>
+        <div class="examples">
+          <p class="examples-title">أمثلة على الأسئلة:</p>
+          <ul>
+            <li>ما هي خطوات رفع دعوى قضائية؟</li>
+            <li>ما الفرق بين الجنحة والجناية؟</li>
+            <li>كيف أحمي حقوقي في عقد العمل؟</li>
+          </ul>
+        </div>
+      </div>
+    } @else {
+      <!-- Messages List -->
+      @for (message of messages(); track message.id) {
+        <div
+          class="message"
+          [class.user-message]="message.role === 'user'"
+          [class.assistant-message]="message.role === 'assistant'"
+          [class.error-message]="message.error">
+
+          <!-- Message Avatar -->
+          <div class="message-avatar">
+            @if (message.role === 'user') {
+              <i class="bi bi-person-circle"></i>
+            } @else {
+              <i class="bi bi-robot"></i>
+            }
+          </div>
+
+          <!-- Message Content -->
+          <div class="message-content">
+            <!-- Message Header -->
+            <div class="message-header">
+              <span class="message-role">
+                {{ message.role === 'user' ? 'أنت' : 'المساعد القانوني' }}
+              </span>
+              <span class="message-time">
+                {{ message.timestamp | date: 'shortTime' }}
+              </span>
+            </div>
+
+            <!-- Message Text -->
+            <div class="message-text">
+              <!-- Actual Message -->
+              <p [innerHTML]="message.content | nl2br"></p>
+
+              <!-- Model Info (for assistant messages) -->
+              @if (message.role === 'assistant' && message.model && !message.error) {
+                <div class="model-info">
+                  <i class="bi bi-cpu"></i>
+                  {{ message.model }}
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-input-container">
+    <div class="input-wrapper">
+      <textarea
+        class="form-control chat-input"
+        [(ngModel)]="userInput"
+        (keypress)="onKeyPress($event)"
+        placeholder="اكتب سؤالك القانوني هنا..."
+        rows="1"
+        [attr.aria-label]="'حقل إدخال السؤال القانوني'">
+      </textarea>
+
+      <button
+        class="send-btn"
+        (click)="sendMessage()"
+        [disabled]="!userInput().trim() || isLoading()"
+        [attr.aria-label]="'إرسال الرسالة'">
+        @if (isLoading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          <span>جاري الإرسال...</span>
+        } @else {
+          <i class="bi bi-send-fill me-2"></i>
+          <span>إرسال</span>
+        }
+      </button>
+    </div>
+
+    <div class="input-hint">
+      اضغط Enter للإرسال، Shift+Enter لسطر جديد
+    </div>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { provideToastr } from 'ngx-toastr';
 import { routes } from './app.routes';
 import { credentialsInterceptor } from './core/interceptors/credentials.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -15,7 +16,12 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(
-      withInterceptors([credentialsInterceptor, authInterceptor, errorInterceptor])
+      withInterceptors([
+        credentialsInterceptor,
+        authInterceptor,
+        loadingInterceptor,
+        errorInterceptor
+      ])
     ),
     provideToastr({
       timeOut: 3000,

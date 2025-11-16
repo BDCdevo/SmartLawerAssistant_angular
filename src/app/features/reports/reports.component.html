@@ -1,0 +1,331 @@
+<div class="reports-page" dir="rtl">
+  <!-- Compact Header -->
+  <div class="page-header-compact no-print">
+    <h1 class="header-title">التقارير والإحصائيات</h1>
+    <div class="header-actions">
+      <button (click)="loadReports()" [disabled]="loading()" class="action-btn btn-secondary">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button (click)="exportPDF()" class="action-btn btn-primary">
+        <span class="btn-icon">📥</span>
+        <span>تصدير PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Type Selector -->
+  <div class="report-selector no-print">
+    @for (type of reportTypes; track type.value) {
+      <button
+        (click)="selectedReport.set(type.value)"
+        [class.active]="selectedReport() === type.value"
+        class="report-tab"
+      >
+        <span class="tab-icon">{{ type.icon }}</span>
+        <span class="tab-label">{{ type.label }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Report Container (Printable) -->
+  <div class="report-container">
+    <!-- Print Header (Only visible in print) -->
+    <div class="print-only print-header">
+      <div class="print-logo">⚖️ Smart Lawyer</div>
+      <h1>{{ getReportTitle() }}</h1>
+      <p class="print-date">تاريخ الطباعة: {{ formatDate(getCurrentDate()) }}</p>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>جاري تحميل التقارير...</p>
+      </div>
+    }
+
+    @if (!loading()) {
+      <!-- Overview Report -->
+      @if (selectedReport() === 'overview') {
+        <div class="report-section">
+          <h2 class="section-title">نظرة عامة - مؤشرات الأداء الرئيسية</h2>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon bg-blue-100 text-blue-600">⚖️</div>
+              <div class="kpi-content">
+                <h3 class="kpi-value">{{ kpis()?.totalCases || 0 }}</h3>
+                <p class="kpi-label">إجمالي القضايا</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon bg-green-100 text-green-600">✅</div>
+              <div class="kpi-content">
+                <h3 class="kpi-value">{{ kpis()?.closedCases || 0 }}</h3>
+                <p class="kpi-label">قضايا مغلقة</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon bg-purple-100 text-purple-600">👥</div>
+              <div class="kpi-content">
+                <h3 class="kpi-value">{{ kpis()?.totalClients || 0 }}</h3>
+                <p class="kpi-label">إجمالي العملاء</p>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon bg-orange-100 text-orange-600">📅</div>
+              <div class="kpi-content">
+                <h3 class="kpi-value">{{ kpis()?.upcomingSessions || 0 }}</h3>
+                <p class="kpi-label">جلسات قادمة</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="reports-grid">
+            <!-- Cases Summary -->
+            <div class="report-card">
+              <h3 class="card-title">ملخص القضايا</h3>
+              @if (casesSummary()) {
+                <div class="summary-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">إجمالي:</span>
+                    <span class="stat-value">{{ casesSummary()!.total }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">مفتوحة:</span>
+                    <span class="stat-value text-blue-600">{{ casesSummary()!.open || 0 }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">قيد المعالجة:</span>
+                    <span class="stat-value text-orange-600">{{ casesSummary()!.inProgress || 0 }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">مغلقة:</span>
+                    <span class="stat-value text-green-600">{{ casesSummary()!.closed }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Clients Summary -->
+            <div class="report-card">
+              <h3 class="card-title">ملخص العملاء</h3>
+              @if (clientsSummary()) {
+                <div class="summary-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">إجمالي العملاء:</span>
+                    <span class="stat-value">{{ clientsSummary()!.total }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">عملاء نشطون:</span>
+                    <span class="stat-value text-green-600">{{ clientsSummary()!.active }}</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">عملاء بقضايا نشطة:</span>
+                    <span class="stat-value text-blue-600">{{ clientsSummary()!.withActiveCases }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Cases Report -->
+      @if (selectedReport() === 'cases') {
+        <div class="report-section">
+          <h2 class="section-title">تقرير القضايا التفصيلي</h2>
+
+          @if (casesSummary()) {
+            <div class="report-card">
+              <div class="card-header">
+                <h3>إحصائيات القضايا</h3>
+              </div>
+
+              <div class="stats-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>الحالة</th>
+                      <th>العدد</th>
+                      <th>النسبة المئوية</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>إجمالي القضايا</td>
+                      <td class="font-bold">{{ casesSummary()!.total }}</td>
+                      <td>100%</td>
+                    </tr>
+                    <tr>
+                      <td>قضايا مفتوحة</td>
+                      <td class="text-blue-600 font-bold">{{ casesSummary()!.open || 0 }}</td>
+                      <td>{{ Math.round((casesSummary()!.open || 0) / casesSummary()!.total * 100) }}%</td>
+                    </tr>
+                    <tr>
+                      <td>قضايا قيد المعالجة</td>
+                      <td class="text-orange-600 font-bold">{{ casesSummary()!.inProgress || 0 }}</td>
+                      <td>{{ Math.round((casesSummary()!.inProgress || 0) / casesSummary()!.total * 100) }}%</td>
+                    </tr>
+                    <tr>
+                      <td>قضايا مغلقة</td>
+                      <td class="text-green-600 font-bold">{{ casesSummary()!.closed }}</td>
+                      <td>{{ Math.round(casesSummary()!.closed / casesSummary()!.total * 100) }}%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Sessions Report -->
+      @if (selectedReport() === 'sessions') {
+        <div class="report-section">
+          <h2 class="section-title">تقرير الجلسات القادمة</h2>
+
+          <div class="report-card">
+            <div class="card-header">
+              <h3>الجلسات المجدولة ({{ upcomingSessions().length }})</h3>
+            </div>
+
+            @if (upcomingSessions().length > 0) {
+              <div class="sessions-list">
+                @for (session of upcomingSessions(); track session.id) {
+                  <div class="session-item">
+                    <div class="session-info">
+                      <h4 class="session-title">{{ session.title || 'جلسة محكمة' }}</h4>
+                      @if (session.case) {
+                        <p class="session-case">قضية {{ session.case.number }}/{{ session.case.year }}</p>
+                      }
+                      @if (session.court) {
+                        <p class="session-court">{{ session.court.nameAr }}</p>
+                      }
+                    </div>
+                    <div class="session-date">
+                      <p class="date-text">{{ formatDate(session.startsAtUtc) }}</p>
+                      @if (session.room) {
+                        <p class="room-text">القاعة: {{ session.room }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-state">
+                <p>لا توجد جلسات قادمة</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Lawyers Workload Report -->
+      @if (selectedReport() === 'lawyers') {
+        <div class="report-section">
+          <h2 class="section-title">تقرير عبء عمل المحامين</h2>
+
+          <div class="report-card">
+            @if (lawyersWorkload().length > 0) {
+              <div class="stats-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>المحامي</th>
+                      <th>القضايا النشطة</th>
+                      <th>الجلسات القادمة</th>
+                      <th>معدل العبء</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (lawyer of lawyersWorkload(); track lawyer.lawyerId) {
+                      <tr>
+                        <td class="font-semibold">{{ lawyer.lawyerName }}</td>
+                        <td class="text-blue-600">{{ lawyer.activeCases }}</td>
+                        <td class="text-orange-600">{{ lawyer.upcomingSessions }}</td>
+                        <td>
+                          <span [class]="lawyer.activeCases >= 10 ? 'badge-high' : lawyer.activeCases >= 5 ? 'badge-medium' : 'badge-low'">
+                            {{ lawyer.activeCases >= 10 ? 'عالي' : lawyer.activeCases >= 5 ? 'متوسط' : 'منخفض' }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <div class="empty-state">
+                <p>لا توجد بيانات متاحة</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Clients Report -->
+      @if (selectedReport() === 'clients') {
+        <div class="report-section">
+          <h2 class="section-title">تقرير العملاء</h2>
+
+          @if (clientsSummary()) {
+            <div class="report-card">
+              <div class="stats-grid">
+                <div class="stat-box">
+                  <div class="stat-icon bg-purple-100 text-purple-600">👥</div>
+                  <div class="stat-details">
+                    <h4 class="stat-number">{{ clientsSummary()!.total }}</h4>
+                    <p class="stat-description">إجمالي العملاء</p>
+                  </div>
+                </div>
+
+                <div class="stat-box">
+                  <div class="stat-icon bg-green-100 text-green-600">✓</div>
+                  <div class="stat-details">
+                    <h4 class="stat-number">{{ clientsSummary()!.active }}</h4>
+                    <p class="stat-description">عملاء نشطون</p>
+                  </div>
+                </div>
+
+                <div class="stat-box">
+                  <div class="stat-icon bg-blue-100 text-blue-600">⚖️</div>
+                  <div class="stat-details">
+                    <h4 class="stat-number">{{ clientsSummary()!.withActiveCases }}</h4>
+                    <p class="stat-description">عملاء بقضايا نشطة</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-4">التحليل</h4>
+                <div class="analysis-list">
+                  <div class="analysis-item">
+                    <span class="analysis-label">معدل التفعيل:</span>
+                    <span class="analysis-value">
+                      {{ Math.round((clientsSummary()!.active / clientsSummary()!.total) * 100) }}%
+                    </span>
+                  </div>
+                  <div class="analysis-item">
+                    <span class="analysis-label">معدل العملاء بقضايا نشطة:</span>
+                    <span class="analysis-value">
+                      {{ Math.round((clientsSummary()!.withActiveCases / clientsSummary()!.total) * 100) }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Print Footer (Only visible in print) -->
+  <div class="print-only print-footer">
+    <p>Smart Lawyer Portal - نظام إدارة المكتب القانوني</p>
+    <p>تم الإنشاء تلقائياً في {{ formatDate(getCurrentDate()) }}</p>
+  </div>
+</div>

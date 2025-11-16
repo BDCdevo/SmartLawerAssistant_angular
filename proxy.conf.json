@@ -1,8 +1,15 @@
 {
   "/api": {
-    "target": "http://smartlawerassistant.runasp.net",
+    "target": "https://mohami.bdcbiz.com",
     "secure": false,
     "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/notificationHub": {
+    "target": "https://mohami.bdcbiz.com",
+    "secure": false,
+    "changeOrigin": true,
+    "ws": true,
     "logLevel": "debug"
   }
 }

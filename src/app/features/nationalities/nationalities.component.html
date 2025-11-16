@@ -1,0 +1,212 @@
+<div class="nationalities-container">
+  <!-- Compact Header -->
+  <div class="page-header-compact">
+    <h1 class="header-title">إدارة الجنسيات</h1>
+    <div class="header-actions">
+      <button class="action-btn btn-secondary" (click)="loadNationalities()" [disabled]="loading()">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button class="action-btn btn-primary" (click)="openCreateModal()">
+        <span class="btn-icon">➕</span>
+        <span>إضافة جنسية جديدة</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact Filters - Single Row -->
+  <div class="filters-compact">
+    <div class="search-group">
+      <input
+        type="text"
+        placeholder="🔍 ابحث عن جنسية..."
+        [value]="searchTerm()"
+        (input)="searchTerm.set($any($event.target).value)"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="search-btn" (click)="onSearch()">بحث</button>
+    </div>
+    <div class="filter-group">
+      <select
+        [value]="showActiveOnly() === undefined ? 'all' : (showActiveOnly() ? 'active' : 'inactive')"
+        (change)="showActiveOnly.set($any($event.target).value === 'all' ? undefined : $any($event.target).value === 'active'); onFilterChange()"
+      >
+        <option value="all">الكل</option>
+        <option value="active">نشط</option>
+        <option value="inactive">غير نشط</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>جاري التحميل...</p>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading()) {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>العلم</th>
+            <th>الاسم بالعربية</th>
+            <th>الاسم بالإنجليزية</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (nationalities().length === 0) {
+            <tr>
+              <td colspan="6" class="no-data">
+                <div class="empty-state">
+                  <span class="empty-icon">📋</span>
+                  <p>لا توجد بيانات لعرضها</p>
+                </div>
+              </td>
+            </tr>
+          }
+          @for (nationality of nationalities(); track nationality.id) {
+            <tr [class.deleted-row]="nationality.isDeleted">
+              <td>{{ nationality.id }}</td>
+              <td class="flag-cell">
+                <span class="flag-emoji">{{ nationality.flagEmoji || '🏳️' }}</span>
+              </td>
+              <td class="name-cell">{{ nationality.nameAr }}</td>
+              <td class="name-cell-en">{{ nationality.nameEn || '-' }}</td>
+              <td>
+                <span class="status-badge" [class.active]="nationality.isActive" [class.inactive]="!nationality.isActive">
+                  {{ nationality.isActive ? 'نشط' : 'غير نشط' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                @if (!nationality.isDeleted) {
+                  <button class="action-btn btn-edit" (click)="openEditModal(nationality)" title="تعديل">
+                    ✏️
+                  </button>
+                  <button class="action-btn btn-delete" (click)="deleteNationality(nationality.id)" title="حذف">
+                    🗑️
+                  </button>
+                } @else {
+                  <button class="action-btn btn-restore" (click)="restoreNationality(nationality.id)" title="استرجاع">
+                    ♻️
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination-container">
+        <div class="pagination-info">
+          عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+          <strong>{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+          من <strong>{{ totalItems() }}</strong> جنسية
+        </div>
+        <div class="pagination-controls">
+          <button
+            class="page-btn prev-btn"
+            (click)="previousPage()"
+            [disabled]="currentPage() === 1"
+          >
+            السابق
+          </button>
+          @for (page of pages; track page) {
+            <button
+              class="page-btn"
+              [class.active]="page === currentPage()"
+              (click)="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          }
+          <button
+            class="page-btn next-btn"
+            (click)="nextPage()"
+            [disabled]="currentPage() === totalPages"
+          >
+            التالي
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ isEditMode() ? 'تعديل جنسية' : 'إضافة جنسية جديدة' }}</h2>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label required">الاسم بالعربية</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="formData().nameAr"
+            (input)="updateField('nameAr', $any($event.target).value)"
+            placeholder="مثال: مصري"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الاسم بالإنجليزية</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="formData().nameEn"
+            (input)="updateField('nameEn', $any($event.target).value)"
+            placeholder="Example: Egyptian"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">العلم (Emoji)</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="formData().flagEmoji"
+            (input)="updateField('flagEmoji', $any($event.target).value)"
+            placeholder="مثال: 🇪🇬"
+            maxlength="8"
+          />
+          <small class="form-hint">يمكنك نسخ العلم من <a href="https://emojipedia.org/flags" target="_blank">هنا</a></small>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="formData().isActive"
+              (change)="updateField('isActive', $any($event.target).checked)"
+            />
+            <span>نشط</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          إلغاء
+        </button>
+        <button class="btn btn-primary" (click)="saveNationality()" [disabled]="loading()">
+          {{ loading() ? 'جاري الحفظ...' : (isEditMode() ? 'تحديث' : 'حفظ') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

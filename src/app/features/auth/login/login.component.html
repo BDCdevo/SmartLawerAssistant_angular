@@ -65,7 +65,7 @@
           <input type="checkbox" formControlName="rememberMe" />
           <span>تذكرني</span>
         </label>
-        <a routerLink="/auth/forgot-password" class="forgot-password">نسيت كلمة المرور؟</a>
+        <button type="button" (click)="openForgetPassword()" class="forgot-password">نسيت كلمة المرور؟</button>
       </div>
 
       <button
@@ -88,3 +88,6 @@
   </div>
 </div>
 
+
+<!-- Forget Password Modal -->
+<app-forget-password></app-forget-password>

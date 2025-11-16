@@ -1,0 +1,279 @@
+<div class="assignments-container">
+  <!-- Compact Header -->
+  <div class="page-header-compact">
+    <h1 class="header-title">إدارة تعيينات القضايا</h1>
+    <div class="header-actions">
+      <button class="action-btn btn-secondary" (click)="onSearch()" [disabled]="loading()">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button class="action-btn btn-primary" (click)="openAssignModal()">
+        <span class="btn-icon">➕</span>
+        <span>تعيين مستخدم</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact Filters - Single Row -->
+  <div class="filters-compact">
+    <div class="filter-group">
+      <input
+        type="number"
+        placeholder="رقم القضية"
+        [value]="filterCaseId() ?? ''"
+        (input)="filterCaseId.set($any($event.target).value ? +$any($event.target).value : undefined)"
+      />
+    </div>
+    <div class="filter-group">
+      <input
+        type="text"
+        placeholder="معرف المستخدم"
+        [value]="filterUserId()"
+        (input)="filterUserId.set($any($event.target).value)"
+      />
+    </div>
+    <div class="filter-group">
+      <select
+        [value]="filterRole()"
+        (change)="filterRole.set($any($event.target).value)"
+      >
+        @for (option of roleOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="checkbox-inline">
+        <input
+          type="checkbox"
+          [checked]="showActiveOnly()"
+          (change)="showActiveOnly.set($any($event.target).checked)"
+        />
+        <span>نشط فقط</span>
+      </label>
+    </div>
+    <button class="search-btn" (click)="onSearch()">بحث</button>
+    <button class="clear-filters-btn" (click)="clearFilters()">🗑️ مسح</button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>جاري التحميل...</p>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading()) {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>رقم القضية</th>
+            <th>عنوان القضية</th>
+            <th>المستخدم</th>
+            <th>البريد الإلكتروني</th>
+            <th>الدور</th>
+            <th>تاريخ التعيين</th>
+            <th>ملاحظات</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (assignments().length === 0) {
+            <tr>
+              <td colspan="9" class="no-data">
+                <div class="empty-state">
+                  <span class="empty-icon">📋</span>
+                  <p>لا توجد تعيينات لعرضها</p>
+                </div>
+              </td>
+            </tr>
+          }
+          @for (assignment of assignments(); track assignment.id) {
+            <tr [class.deleted-row]="assignment.isDeleted">
+              <td>{{ assignment.id }}</td>
+              <td class="case-number">{{ assignment.caseNumber || assignment.caseId }}</td>
+              <td class="case-title">{{ assignment.caseTitle || '-' }}</td>
+              <td class="user-name">{{ assignment.userName || assignment.userId }}</td>
+              <td class="user-email">{{ assignment.userEmail || '-' }}</td>
+              <td>
+                <span class="role-badge">
+                  {{ getRoleLabel(assignment.role) }}
+                </span>
+              </td>
+              <td class="date-cell">{{ formatDate(assignment.assignedAt) }}</td>
+              <td class="notes-cell">{{ assignment.notes || '-' }}</td>
+              <td class="actions-cell">
+                @if (!assignment.isDeleted) {
+                  <button
+                    class="btn-icon btn-unassign"
+                    (click)="openUnassignModal(assignment)"
+                    title="إلغاء التعيين"
+                  >
+                    ⛔
+                  </button>
+                  <button
+                    class="btn-icon btn-delete"
+                    (click)="deleteAssignment(assignment.id)"
+                    title="حذف"
+                  >
+                    🗑️
+                  </button>
+                } @else {
+                  <button
+                    class="btn-icon btn-restore"
+                    (click)="restoreAssignment(assignment.id)"
+                    title="استرجاع"
+                  >
+                    ♻️
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination-container">
+        <div class="pagination-info">
+          عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+          <strong>{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+          من <strong>{{ totalItems() }}</strong> تعيين
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn prev-btn" (click)="previousPage()" [disabled]="currentPage() === 1">
+            السابق
+          </button>
+          @for (page of pages; track page) {
+            <button
+              class="page-btn"
+              [class.active]="page === currentPage()"
+              (click)="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          }
+          <button class="page-btn next-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages">
+            التالي
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Assign Modal -->
+@if (showAssignModal()) {
+  <div class="modal-overlay" (click)="closeAssignModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>تعيين مستخدم لقضية</h2>
+        <button class="modal-close" (click)="closeAssignModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label required">رقم القضية</label>
+          <input
+            type="number"
+            class="form-input"
+            [value]="assignForm().caseId"
+            (input)="updateAssignField('caseId', +$any($event.target).value)"
+            placeholder="أدخل رقم القضية"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">معرف المستخدم</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="assignForm().userId"
+            (input)="updateAssignField('userId', $any($event.target).value)"
+            placeholder="أدخل معرف المستخدم (User ID)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الدور</label>
+          <select
+            class="form-input"
+            [value]="assignForm().role"
+            (change)="updateAssignField('role', $any($event.target).value)"
+          >
+            <option value="">اختر الدور (اختياري)</option>
+            <option value="Lawyer">محامي</option>
+            <option value="Assistant">مساعد</option>
+            <option value="Consultant">مستشار</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ملاحظات</label>
+          <textarea
+            class="form-textarea"
+            rows="3"
+            [value]="assignForm().notes"
+            (input)="updateAssignField('notes', $any($event.target).value)"
+            placeholder="ملاحظات إضافية (اختياري)"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAssignModal()">
+          إلغاء
+        </button>
+        <button class="btn btn-primary" (click)="assignUser()" [disabled]="loading()">
+          {{ loading() ? 'جاري التعيين...' : 'تعيين' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Unassign Modal -->
+@if (showUnassignModal()) {
+  <div class="modal-overlay" (click)="closeUnassignModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>إلغاء تعيين مستخدم</h2>
+        <button class="modal-close" (click)="closeUnassignModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="unassign-info">
+          <p><strong>القضية:</strong> {{ selectedAssignment()?.caseNumber || selectedAssignment()?.caseId }}</p>
+          <p><strong>المستخدم:</strong> {{ selectedAssignment()?.userName || selectedAssignment()?.userId }}</p>
+          <p><strong>الدور:</strong> {{ getRoleLabel(selectedAssignment()?.role) }}</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ملاحظات (سبب إلغاء التعيين)</label>
+          <textarea
+            class="form-textarea"
+            rows="3"
+            [value]="unassignNotes()"
+            (input)="unassignNotes.set($any($event.target).value)"
+            placeholder="اكتب السبب (اختياري)"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeUnassignModal()">
+          إلغاء
+        </button>
+        <button class="btn btn-danger" (click)="unassignUser()" [disabled]="loading()">
+          {{ loading() ? 'جاري الإلغاء...' : 'إلغاء التعيين' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

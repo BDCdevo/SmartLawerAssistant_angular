@@ -1,4 +1,5 @@
 @import 'ngx-toastr/toastr';
+@import '@ng-select/ng-select/themes/default.theme.css';
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +7,140 @@
 
 /* Cairo Font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+
+/* ====================================
+   Theme CSS Variables
+   ==================================== */
+
+:root {
+  /* Light Theme Colors (Default) */
+  --primary-color: #2F2F40;
+  --primary-hover: #1f1f2a;
+  --secondary-color: #D6AE5A;
+  --accent-color: #c99d45;
+
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #F0F0F0;
+  --bg-tertiary: #e5e5e5;
+  --bg-hover: #e0e0e0;
+
+  /* Text Colors */
+  --text-primary: #2F2F40;
+  --text-secondary: #4a4a5c;
+  --text-tertiary: #6b6b7d;
+  --text-muted: #9a9aaa;
+
+  /* Border Colors */
+  --border-color: #d0d0d0;
+  --border-hover: #b0b0b0;
+
+  /* Shadow Colors */
+  --shadow-sm: rgba(47, 47, 64, 0.1);
+  --shadow-md: rgba(47, 47, 64, 0.15);
+  --shadow-lg: rgba(47, 47, 64, 0.2);
+
+  /* Sidebar Colors */
+  --sidebar-bg: #2F2F40;
+  --sidebar-text: #b0b0c0;
+  --sidebar-text-hover: #D6AE5A;
+  --sidebar-active-bg: rgba(214, 174, 90, 0.15);
+  --sidebar-active-text: #D6AE5A;
+
+  /* Header Colors */
+  --header-bg: #ffffff;
+  --header-text: #2F2F40;
+  --header-border: #d0d0d0;
+
+  /* Card Colors */
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px rgba(47, 47, 64, 0.1);
+  --card-hover-shadow: 0 4px 12px rgba(47, 47, 64, 0.15);
+
+  /* Input Colors */
+  --input-bg: #ffffff;
+  --input-border: #d0d0d0;
+  --input-focus-border: #D6AE5A;
+  --input-text: #2F2F40;
+  --input-placeholder: #9a9aaa;
+
+  /* Status Colors */
+  --success-color: #48bb78;
+  --warning-color: #D6AE5A;
+  --error-color: #f56565;
+  --info-color: #4299e1;
+
+  /* Scrollbar Colors */
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #9a9aaa;
+  --scrollbar-thumb-hover: #6b6b7d;
+}
+
+/* Dark Theme */
+[data-theme="dark"],
+.dark-theme {
+  /* Primary Colors */
+  --primary-color: #D6AE5A;
+  --primary-hover: #c99d45;
+  --secondary-color: #b8934a;
+  --accent-color: #e8c576;
+
+  /* Background Colors */
+  --bg-primary: #1f1f2e;
+  --bg-secondary: #2F2F40;
+  --bg-tertiary: #3a3a4f;
+  --bg-hover: #454560;
+
+  /* Text Colors */
+  --text-primary: #f5f5f5;
+  --text-secondary: #e0e0e0;
+  --text-tertiary: #c5c5c5;
+  --text-muted: #a0a0a0;
+
+  /* Border Colors */
+  --border-color: #454560;
+  --border-hover: #5a5a75;
+
+  /* Shadow Colors */
+  --shadow-sm: rgba(0, 0, 0, 0.3);
+  --shadow-md: rgba(0, 0, 0, 0.4);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
+
+  /* Sidebar Colors */
+  --sidebar-bg: #1f1f2e;
+  --sidebar-text: #b0b0c0;
+  --sidebar-text-hover: #D6AE5A;
+  --sidebar-active-bg: rgba(214, 174, 90, 0.15);
+  --sidebar-active-text: #D6AE5A;
+
+  /* Header Colors */
+  --header-bg: #2F2F40;
+  --header-text: #f5f5f5;
+  --header-border: #454560;
+
+  /* Card Colors */
+  --card-bg: #2F2F40;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  /* Input Colors */
+  --input-bg: #3a3a4f;
+  --input-border: #454560;
+  --input-focus-border: #D6AE5A;
+  --input-text: #f5f5f5;
+  --input-placeholder: #a0a0a0;
+
+  /* Status Colors (slightly adjusted for dark theme) */
+  --success-color: #34d399;
+  --warning-color: #D6AE5A;
+  --error-color: #f87171;
+  --info-color: #60a5fa;
+
+  /* Scrollbar Colors */
+  --scrollbar-track: #3a3a4f;
+  --scrollbar-thumb: #6b6b7d;
+  --scrollbar-thumb-hover: #9a9aaa;
+}
 
 /* Global Styles */
 * {
@@ -19,12 +154,13 @@ body {
   height: 100%;
   direction: rtl;
   font-family: 'Cairo', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
   margin: 0;
-  background-color: #f7fafc;
-  color: #2d3748;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   font-size: 16px;
   line-height: 1.5;
 }
@@ -37,12 +173,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links */
 a {
-  color: #667eea;
+  color: var(--primary-color);
   text-decoration: none;
   transition: color 0.2s;
 
   &:hover {
-    color: #764ba2;
+    color: var(--primary-hover);
   }
 }
 
@@ -73,15 +209,15 @@ select {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--scrollbar-thumb);
   border-radius: 5px;
 
   &:hover {
-    background: #555;
+    background: var(--scrollbar-thumb-hover);
   }
 }
 
@@ -131,14 +267,14 @@ select {
 
 /* Card Styles */
 .card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-shadow);
   padding: 1.5rem;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, background-color 0.3s;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--card-hover-shadow);
   }
 }
 
@@ -147,8 +283,8 @@ select {
   display: inline-block;
   width: 2rem;
   height: 2rem;
-  border: 3px solid #e2e8f0;
-  border-top-color: #667eea;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -240,7 +376,7 @@ html {
 
 /* Better focus outline */
 *:focus {
-  outline: 2px solid #667eea;
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
@@ -284,5 +420,56 @@ img {
 
   @media (min-width: 1536px) {
     max-width: 1536px;
+  }
+}
+
+/* ng-select global overrides */
+.ng-select {
+  font-family: 'Cairo', sans-serif !important;
+
+  .ng-select-container {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    min-height: 40px;
+    align-items: center;
+    transition: border-color 0.2s, background-color 0.3s;
+  }
+
+  .ng-placeholder {
+    color: var(--input-placeholder);
+  }
+
+  .ng-value {
+    color: var(--input-text);
+  }
+
+  .ng-input > input {
+    color: var(--input-text);
+  }
+
+  &.ng-select-focused .ng-select-container {
+    border-color: var(--input-focus-border);
+  }
+
+  .ng-dropdown-panel {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+
+    .ng-dropdown-panel-items {
+      .ng-option {
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        transition: background-color 0.2s;
+
+        &.ng-option-marked {
+          background-color: var(--bg-hover);
+        }
+
+        &.ng-option-selected {
+          background-color: var(--primary-color);
+          color: var(--bg-primary);
+        }
+      }
+    }
   }
 }

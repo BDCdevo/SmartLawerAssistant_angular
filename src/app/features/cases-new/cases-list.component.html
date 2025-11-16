@@ -1,0 +1,137 @@
+<div class="cases-container" dir="rtl">
+  <!-- Compact Header -->
+  <div class="page-header-compact">
+    <h1 class="header-title">إدارة القضايا</h1>
+    <div class="header-actions">
+      <button class="action-btn btn-secondary" (click)="onSearch()" [disabled]="loading()">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button class="action-btn btn-primary" (click)="createCase()">
+        <span class="btn-icon">➕</span>
+        <span>إضافة قضية جديدة</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact Filters - Single Row -->
+  <div class="filters-compact">
+    <div class="search-group">
+      <input
+        type="text"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        (keyup.enter)="onSearch()"
+        placeholder="🔍 ابحث برقم القضية، السنة، العميل أو المحكمة..."
+      />
+    </div>
+    <div class="filter-group">
+      <select
+        [value]="selectedStatus()"
+        (change)="selectedStatus.set($any($event.target).value); onStatusChange()"
+      >
+        @for (status of statusOptions; track status.value) {
+          <option [value]="status.value">{{ status.label }}</option>
+        }
+      </select>
+    </div>
+    <button class="search-btn" (click)="onSearch()">بحث</button>
+    <button class="clear-filters-btn" (click)="clearSearch()">🗑️ مسح</button>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-message">
+      ⚠️ {{ error() }}
+    </div>
+  }
+
+  <!-- Loading Spinner -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>جاري تحميل القضايا...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (isEmpty()) {
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3 class="empty-title">لا توجد قضايا</h3>
+      <p class="empty-message">لم يتم العثور على أي قضايا. ابدأ بإضافة قضية جديدة.</p>
+      <button class="action-btn btn-primary" (click)="createCase()">
+        <span class="btn-icon">➕</span>
+        <span>إضافة قضية جديدة</span>
+      </button>
+    </div>
+  }
+
+  <!-- Cases Table -->
+  @if (hasData() && !loading()) {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>رقم القضية</th>
+            <th>السنة</th>
+            <th>الحالة</th>
+            <th>العميل</th>
+            <th>المحكمة</th>
+            <th>تاريخ الإنشاء</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (caseItem of cases(); track trackByCase($index, caseItem)) {
+            <tr>
+              <td>
+                <div class="case-number">{{ caseItem.number }}</div>
+              </td>
+              <td>{{ caseItem.year }}</td>
+              <td>
+                <span class="status-badge {{ getStatusClass(caseItem.status) }}">
+                  {{ getStatusLabel(caseItem.status) }}
+                </span>
+              </td>
+              <td>{{ caseItem.client?.fullName || '-' }}</td>
+              <td>{{ caseItem.court?.nameAr || '-' }}</td>
+              <td>
+                <div class="date-text">{{ formatDate(caseItem.createdAt) }}</div>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn btn-view" (click)="viewCase(caseItem)" title="عرض التفاصيل">👁️</button>
+                <button class="action-btn btn-edit" (click)="editCase(caseItem)" title="تعديل">✏️</button>
+                <button class="action-btn btn-delete" (click)="deleteCase(caseItem)" title="حذف">🗑️</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (showPagination()) {
+      <div class="pagination-container">
+        <div class="pagination-info">
+          عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+          <strong>{{ Math.min(currentPage() * pageSize(), totalCount()) }}</strong>
+          من <strong>{{ totalCount() }}</strong> قضية
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn prev-btn" (click)="previousPage()" [disabled]="currentPage() === 1">
+            السابق
+          </button>
+          @for (page of paginationPages(); track page) {
+            <button class="page-btn" [class.active]="page === currentPage()" (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          }
+          <button class="page-btn next-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages()">
+            التالي
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

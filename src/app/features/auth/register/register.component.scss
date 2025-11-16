@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1rem;
+  padding: 1rem;
 }
 
 .register-card {
@@ -12,31 +12,32 @@
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 650px;
-  padding: 2.5rem;
+  max-width: 550px;
+  padding: 1.25rem 1.5rem;
 }
 
 .register-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 
   h1 {
-    font-size: 1.875rem;
+    font-size: 1.375rem;
     font-weight: bold;
     color: #1a202c;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
   p {
     color: #718096;
-    font-size: 1rem;
+    font-size: 0.8125rem;
   }
 }
 
 .alert {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
 
   &.alert-error {
     background-color: #fee;
@@ -49,7 +50,7 @@
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
 
     @media (max-width: 640px) {
       grid-template-columns: 1fr;
@@ -57,14 +58,15 @@
   }
 
   .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.875rem;
 
     label {
       display: block;
       font-weight: 500;
       color: #2d3748;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.375rem;
       text-align: right;
+      font-size: 0.875rem;
 
       a {
         color: #667eea;
@@ -82,10 +84,10 @@
     input[type="tel"],
     select {
       width: 100%;
-      padding: 0.75rem 1rem;
+      padding: 0.5rem 0.75rem;
       border: 2px solid #e2e8f0;
       border-radius: 6px;
-      font-size: 1rem;
+      font-size: 0.875rem;
       transition: all 0.2s;
       text-align: right;
 
@@ -97,6 +99,10 @@
 
       &.invalid {
         border-color: #fc8181;
+      }
+
+      &.valid {
+        border-color: #48bb78;
       }
 
       &::placeholder {
@@ -112,9 +118,44 @@
     .error-message {
       display: block;
       color: #c53030;
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
+      font-size: 0.8125rem;
+      margin-top: 0.1875rem;
       text-align: right;
+    }
+  }
+
+  .input-with-validation {
+    position: relative;
+
+    input {
+      width: 100%;
+      padding-left: 3rem;
+    }
+
+    .validation-spinner,
+    .validation-success,
+    .validation-error {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.25rem;
+    }
+
+    .validation-spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    .validation-success {
+      color: #48bb78;
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+    .validation-error {
+      color: #fc8181;
+      font-weight: bold;
+      font-size: 1.5rem;
     }
   }
 
@@ -159,12 +200,12 @@
 
   .btn-primary {
     width: 100%;
-    padding: 0.875rem;
+    padding: 0.625rem;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -172,7 +213,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
 
     &:hover:not(:disabled) {
       transform: translateY(-2px);
@@ -198,7 +239,8 @@
 
 .register-footer {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
 
   p {
     color: #718096;

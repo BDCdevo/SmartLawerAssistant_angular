@@ -1,0 +1,71 @@
+// Import Shared Table Styles
+@import '../../shared/styles/shared-table-styles.scss';
+
+.cases-container {
+  padding: 1.5rem;
+  direction: rtl;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+// Spinning animation for refresh button
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Cases-specific table styles
+.case-number {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.date-text {
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+// Status badge colors (specific to cases)
+.status-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+// Error message styling
+.error-message {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+// Custom action buttons for cases
+.btn-view {
+  background-color: #dbeafe;
+  &:hover {
+    background-color: #bfdbfe;
+  }
+}
+
+:host {
+  display: block;
+}
+
+// Print styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

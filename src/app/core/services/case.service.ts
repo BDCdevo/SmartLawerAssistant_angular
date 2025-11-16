@@ -29,6 +29,14 @@ export class CaseService {
     return this.http.get<Case[]>(this.apiUrl, { params });
   }
 
+  /**
+   * Get cases list using POST method (for AI features)
+   * Endpoint: /api/cases/list
+   */
+  getCasesList(searchDto?: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/list`, searchDto || {});
+  }
+
   getCaseById(id: string): Observable<Case> {
     return this.http.get<Case>(`${this.apiUrl}/${id}`);
   }

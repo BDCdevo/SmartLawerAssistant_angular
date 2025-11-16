@@ -1,0 +1,264 @@
+<div class="ai-case-analysis-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="icon">🤖</span>
+        تحليل القضايا بالذكاء الاصطناعي
+      </h1>
+      <p class="page-description">
+        استخدم الذكاء الاصطناعي لتحليل القضايا والمستندات والحصول على رؤى قانونية متعمقة
+      </p>
+    </div>
+
+    <!-- AI Model Selector -->
+    @if (availableModels().length > 0) {
+      <div class="model-selector">
+        <label for="modelSelect">النموذج المستخدم:</label>
+        <ng-select
+          [items]="availableModels()"
+          bindLabel="name"
+          bindValue="id"
+          [ngModel]="currentModel()"
+          (ngModelChange)="changeModel($event)"
+          placeholder="اختر النموذج"
+          [searchable]="true"
+          [clearable]="false"
+          class="model-select ng-select-custom"
+        >
+        </ng-select>
+      </div>
+    }
+  </div>
+
+  <!-- Analysis Type Selector -->
+  <div class="analysis-type-selector">
+    <button
+      class="type-btn"
+      [class.active]="analysisMode() === 'case-document'"
+      (click)="setAnalysisMode('case-document')"
+    >
+      <span class="btn-icon">⚖️</span>
+      <span class="btn-text">تحليل قضية/مستند</span>
+    </button>
+
+    <button
+      class="type-btn"
+      [class.active]="analysisMode() === 'file'"
+      (click)="setAnalysisMode('file')"
+    >
+      <span class="btn-icon">📁</span>
+      <span class="btn-text">رفع ملف</span>
+    </button>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Input Panel -->
+    <div class="input-panel">
+      <div class="panel-card">
+        <h2 class="panel-title">إدخال البيانات</h2>
+
+        <!-- Case/Document Analysis Form -->
+        @if (analysisMode() === 'case-document') {
+          <form [formGroup]="analysisForm" (ngSubmit)="analyzeCaseDocument()" class="analysis-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="caseId" class="form-label">
+                  <span class="label-icon">⚖️</span>
+                  القضية <span class="required">*</span>
+                </label>
+                <ng-select
+                  [items]="casesList()"
+                  bindLabel="number"
+                  bindValue="id"
+                  formControlName="caseId"
+                  placeholder="ابحث واختر القضية"
+                  [searchable]="true"
+                  [clearable]="true"
+                  notFoundText="لا توجد قضايا"
+                  class="ng-select-custom"
+                >
+                  <ng-template ng-label-tmp let-item="item">
+                    {{ item.number ? (item.number + '/' + item.year) : ('قضية رقم ' + item.id) }}
+                  </ng-template>
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    <div class="option-content">
+                      <strong>{{ item.number ? (item.number + '/' + item.year) : ('قضية رقم ' + item.id) }}</strong>
+                      @if (item.clientName || item.specialty) {
+                        <span class="option-subtitle">{{ item.clientName || item.specialty }}</span>
+                      }
+                    </div>
+                  </ng-template>
+                </ng-select>
+                @if (analysisForm.get('caseId')?.invalid && analysisForm.get('caseId')?.touched) {
+                  <span class="error-message">يرجى اختيار قضية</span>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="documentId" class="form-label">
+                  <span class="label-icon">📄</span>
+                  المستند <span class="required">*</span>
+                </label>
+                <ng-select
+                  [items]="documentsList()"
+                  bindLabel="originalFileName"
+                  bindValue="id"
+                  formControlName="documentId"
+                  placeholder="ابحث واختر المستند"
+                  [searchable]="true"
+                  [clearable]="true"
+                  [disabled]="!analysisForm.get('caseId')?.value"
+                  notFoundText="لا توجد مستندات"
+                  class="ng-select-custom"
+                >
+                  <ng-template ng-label-tmp let-item="item">
+                    {{ item.id }} - {{ item.storedFileName || item.originalFileName || item.title || 'مستند' }}
+                  </ng-template>
+                  <ng-template ng-option-tmp let-item="item" let-index="index">
+                    <div class="option-content">
+                      <strong>#{{ item.id }}</strong>
+                      <span class="option-subtitle">{{ item.storedFileName || item.originalFileName || item.title || 'مستند' }}</span>
+                    </div>
+                  </ng-template>
+                </ng-select>
+                @if (documentsList().length === 0 && analysisForm.get('caseId')?.value) {
+                  <span class="info-hint">لا توجد مستندات لهذه القضية</span>
+                }
+                @if (analysisForm.get('documentId')?.invalid && analysisForm.get('documentId')?.touched) {
+                  <span class="error-message">يرجى اختيار مستند من القضية</span>
+                }
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="submit-btn primary"
+                [disabled]="analysisForm.invalid"
+              >
+                <span class="btn-icon">🔍</span>
+                <span>تحليل القضية</span>
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- File Upload Form -->
+        @if (analysisMode() === 'file') {
+          <div class="analysis-form">
+            <div class="form-group">
+              <label class="form-label">
+                <span class="label-icon">📎</span>
+                رفع ملف للتحليل
+              </label>
+
+              <div class="file-upload-area">
+                @if (!selectedFile()) {
+                  <label for="fileInput" class="file-upload-label">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">
+                      <strong>اضغط لاختيار ملف</strong>
+                      <span>أو اسحب وأفلت الملف هنا</span>
+                    </div>
+                    <div class="upload-hint">
+                      الأنواع المدعومة: PDF, Word, Text, Images (حد أقصى 10 ميجابايت)
+                    </div>
+                  </label>
+                  <input
+                    type="file"
+                    id="fileInput"
+                    (change)="onFileSelected($event)"
+                    class="file-input"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  />
+                } @else {
+                  <div class="selected-file">
+                    <div class="file-icon">📄</div>
+                    <div class="file-info">
+                      <div class="file-name">{{ selectedFile()!.name }}</div>
+                      <div class="file-size">{{ (selectedFile()!.size / 1024).toFixed(2) }} KB</div>
+                    </div>
+                    <button type="button" class="remove-file-btn" (click)="removeSelectedFile()">
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="submit-btn"
+              [disabled]="!selectedFile()"
+              (click)="analyzeFile()"
+            >
+              <span class="btn-icon">🔍</span>
+              تحليل الملف
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel">
+      @if (analysisResult()) {
+        <div class="panel-card results-card">
+          <!-- Action Buttons -->
+          <div class="results-actions">
+            <h2 class="panel-title">
+              <span class="title-icon">⚖️</span>
+              نتيجة التحليل القانوني
+            </h2>
+            <div class="action-buttons">
+              <button class="action-btn download-btn" (click)="downloadAnalysisReport()" title="تنزيل التقرير">
+                <i class="bi bi-download"></i>
+                <span>تنزيل</span>
+              </button>
+              <button class="action-btn print-btn" (click)="printAnalysisReport()" title="طباعة التقرير">
+                <i class="bi bi-printer"></i>
+                <span>طباعة</span>
+              </button>
+              <button class="action-btn clear-btn" (click)="clearAnalysis()" title="مسح النتائج">
+                <i class="bi bi-trash"></i>
+                <span>مسح</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Analysis Metadata -->
+          <div class="analysis-metadata">
+            <div class="metadata-item">
+              <i class="bi bi-cpu"></i>
+              <span class="label">النموذج:</span>
+              <span class="value">{{ analysisResult()!.modelUsed }}</span>
+            </div>
+            <div class="metadata-item">
+              <i class="bi bi-clock-history"></i>
+              <span class="label">التاريخ:</span>
+              <span class="value">{{ analysisResult()!.timestamp | date:'dd/MM/yyyy - HH:mm' }}</span>
+            </div>
+          </div>
+
+          <!-- Full Content with Sections -->
+          <div class="analysis-content">
+            @if (analysisResult()!.pleaFull || analysisResult()!.rawResponse) {
+              <div class="content-viewer" [innerHTML]="formatAnalysisContent(analysisResult()!.pleaFull || analysisResult()!.rawResponse!)"></div>
+            }
+
+          </div>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <div class="empty-icon">🤖</div>
+          <h3 class="empty-title">لم يتم إجراء تحليل بعد</h3>
+          <p class="empty-text">
+            اختر نوع التحليل وأدخل البيانات المطلوبة للحصول على تحليل شامل للقضية باستخدام الذكاء الاصطناعي
+          </p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

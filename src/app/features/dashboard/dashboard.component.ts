@@ -1,7 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReportService, DashboardStatistics, RecentActivity } from '../../core/services/report.service';
+import { AuthService } from '../../core/services/auth.service';
+import { UserRole } from '../../core/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,8 +12,9 @@ import { ReportService, DashboardStatistics, RecentActivity } from '../../core/s
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private reportService = inject(ReportService);
+  private authService = inject(AuthService);
 
   loading = signal(true);
   error = signal<string | null>(null);
@@ -32,8 +35,86 @@ export class DashboardComponent implements OnInit {
 
   recentActivities = signal<RecentActivity[]>([]);
 
+  // Typewriter animation
+  logoPath = 'logo.png';
+  typedText = signal('');
+  private currentPhraseIndex = 0;
+  private currentCharIndex = 0;
+  private isDeleting = false;
+  private typingSpeed = 100;
+  private deletingSpeed = 50;
+  private pauseBeforeDelete = 2000;
+  private pauseBeforeNext = 500;
+  private typingTimeout?: ReturnType<typeof setTimeout>;
+
+  private phrases = [
+    'نظام ذكي متكامل لإدارة المكاتب القانونية',
+    'حلول قانونية مدعومة بالذكاء الاصطناعي',
+    'إدارة احترافية للقضايا والموكلين',
+    'منصة رقمية شاملة للخدمات القانونية',
+    'تكنولوجيا متقدمة في خدمة القانون والعدالة'
+  ];
+
   ngOnInit() {
     this.loadDashboardData();
+    this.startTypingAnimation();
+  }
+
+  ngOnDestroy() {
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+  }
+
+  private startTypingAnimation() {
+    const type = () => {
+      const currentPhrase = this.phrases[this.currentPhraseIndex];
+
+      if (!this.isDeleting && this.currentCharIndex < currentPhrase.length) {
+        // Typing
+        this.typedText.set(currentPhrase.substring(0, this.currentCharIndex + 1));
+        this.currentCharIndex++;
+        this.typingTimeout = setTimeout(type, this.typingSpeed);
+      } else if (this.isDeleting && this.currentCharIndex > 0) {
+        // Deleting
+        this.typedText.set(currentPhrase.substring(0, this.currentCharIndex - 1));
+        this.currentCharIndex--;
+        this.typingTimeout = setTimeout(type, this.deletingSpeed);
+      } else if (!this.isDeleting && this.currentCharIndex === currentPhrase.length) {
+        // Pause before deleting
+        this.isDeleting = true;
+        this.typingTimeout = setTimeout(type, this.pauseBeforeDelete);
+      } else if (this.isDeleting && this.currentCharIndex === 0) {
+        // Move to next phrase
+        this.isDeleting = false;
+        this.currentPhraseIndex = (this.currentPhraseIndex + 1) % this.phrases.length;
+        this.typingTimeout = setTimeout(type, this.pauseBeforeNext);
+      }
+    };
+
+    type();
+  }
+
+  get currentUser() {
+    return this.authService.currentUser;
+  }
+
+  get isAdmin() {
+    return this.currentUser?.role === UserRole.ADMIN ||
+           this.currentUser?.role === UserRole.SUPER_ADMIN;
+  }
+
+  get isLawyer() {
+    return this.currentUser?.role === UserRole.LAWYER;
+  }
+
+  get isViewer() {
+    return this.currentUser?.role === UserRole.VIEWER;
+  }
+
+  // Backward compatibility alias
+  get isClient() {
+    return this.isViewer;
   }
 
   loadDashboardData() {

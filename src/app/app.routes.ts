@@ -37,19 +37,27 @@ export const routes: Routes = [
       },
       {
         path: 'cases',
-        loadComponent: () => import('./features/cases/cases-list/cases-list.component').then(m => m.CasesListComponent)
+        loadComponent: () => import('./features/cases-new/cases-list.component').then(m => m.CasesListComponent)
       },
       {
         path: 'ai-assistant',
         loadComponent: () => import('./features/ai-assistant/ai-assistant.component').then(m => m.AIAssistantComponent)
       },
       {
+        path: 'ai-case-analysis',
+        loadComponent: () => import('./features/ai-case-analysis/ai-case-analysis.component').then(m => m.AiCaseAnalysisComponent)
+      },
+      {
+        path: 'legal-chat',
+        loadComponent: () => import('./features/legal-chat/legal-chat.component').then(m => m.LegalChatComponent)
+      },
+      {
         path: 'clients',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./features/clients/clients-list.component').then(m => m.ClientsListComponent)
       },
       {
         path: 'documents',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./features/documents/documents-list.component').then(m => m.DocumentsListComponent)
       },
       {
         path: 'appointments',
@@ -57,7 +65,53 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
-        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'ai-model-settings',
+        loadComponent: () => import('./features/ai-model-settings/ai-model-settings.component').then(m => m.AIModelSettingsComponent)
+      },
+      {
+        path: 'nationalities',
+        loadComponent: () => import('./features/nationalities/nationalities.component').then(m => m.NationalitiesComponent)
+      },
+      {
+        path: 'rbac',
+        loadComponent: () => import('./features/rbac/rbac.component').then(m => m.RbacComponent)
+      },
+      {
+        path: 'case-assignments',
+        loadComponent: () => import('./features/case-assignments/case-assignments.component').then(m => m.CaseAssignmentsComponent)
+      },
+      {
+        path: 'courts',
+        loadComponent: () => import('./features/courts/courts.component').then(m => m.CourtsComponent)
+      },
+      {
+        path: 'court-types',
+        loadComponent: () => import('./features/court-types/court-types.component').then(m => m.CourtTypesComponent)
+      },
+      {
+        path: 'sessions',
+        loadComponent: () => import('./features/sessions/sessions-list.component').then(m => m.SessionsListComponent)
+      },
+      {
+        path: 'clients-new',
+        children: [
+          {
+            path: '',
+            redirectTo: '/clients',
+            pathMatch: 'full'
+          }
+        ]
       }
     ]
   },

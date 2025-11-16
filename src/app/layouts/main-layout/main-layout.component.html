@@ -1,94 +1,103 @@
-<div class="layout-container" [class.sidebar-closed]="!sidebarOpen()" [class.sidebar-open]="sidebarOpen()">
-  <!-- Sidebar -->
-  <aside class="sidebar" [class.open]="sidebarOpen()" (mouseenter)="onSidebarEnter()" (mouseleave)="onSidebarLeave()" (click)="$event.stopPropagation()">
-    <div class="sidebar-header">
-      <div class="logo">
-        <span class="logo-icon">⚖️</span>
-        <span class="logo-text">Smart Lawyer</span>
+<!-- Global Loading Indicator -->
+<app-global-loading></app-global-loading>
+
+<!-- Sidebar -->
+<aside class="sidebar" [class.open]="sidebarOpen()" (mouseenter)="onSidebarEnter()" (mouseleave)="onSidebarLeave()" (click)="$event.stopPropagation()">
+  <header class="sidebar-header">
+    @if (sidebarOpen()) {
+      <img [src]="logoPath" alt="Smart Lawyer" class="logo-img">
+      <span class="logo-text">Smart Lawyer</span>
+    } @else {
+      <img [src]="logoPath" alt="Smart Lawyer" class="logo-img">
+    }
+  </header>
+
+  <nav class="sidebar-nav">
+    @for (item of menuItems(); track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-item"
+        [title]="item.label"
+        (click)="closeSidebarOnMobile()"
+      >
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+  <!-- Header -->
+  <header class="top-header">
+    <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
+    <h2 class="page-title">{{ userFullName() }}</h2>
+
+    <div class="header-actions">
+      <!-- Theme Toggle -->
+      <button
+        class="icon-btn theme-toggle"
+        (click)="themeService.toggleTheme()"
+        [title]="themeService.isDark() ? 'الوضع الفاتح' : 'الوضع الداكن'"
+      >
+        @if (themeService.isDark()) {
+          ☀️
+        } @else {
+          🌙
+        }
+      </button>
+
+      <!-- Notifications -->
+      <button class="icon-btn" title="الإشعارات">
+        <span class="badge">3</span>
+        🔔
+      </button>
+
+      <!-- User Menu -->
+      <div class="user-menu-wrap">
+        <button class="user-avatar" (click)="toggleUserMenu()">
+          {{ userInitials() }}
+        </button>
+
+        @if (userMenuOpen()) {
+          <div class="user-menu">
+            <header class="user-menu-header">
+              <div class="user-avatar-large">{{ userInitials() }}</div>
+              <div class="user-info">
+                <div class="user-name">{{ userFullName() }}</div>
+                <div class="user-email">{{ userEmail() }}</div>
+                @if (userRole()) {
+                  <div class="user-role">{{ userRole() }}</div>
+                }
+              </div>
+            </header>
+
+            <nav class="user-menu-nav">
+              <a routerLink="/profile" class="menu-item" (click)="toggleUserMenu()">
+                <span>👤</span> الملف الشخصي
+              </a>
+              <a routerLink="/settings" class="menu-item" (click)="toggleUserMenu()">
+                <span>⚙️</span> الإعدادات
+              </a>
+              <button class="menu-item logout" (click)="logout()">
+                <span>🚪</span> تسجيل الخروج
+              </button>
+            </nav>
+          </div>
+        }
       </div>
     </div>
+  </header>
 
-    <nav class="sidebar-nav">
-      @for (item of menuItems; track item.route) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="active"
-          class="nav-item"
-          [title]="item.label"
-          (click)="closeSidebarOnMobile()"
-        >
-          <span class="nav-icon">{{ item.icon }}</span>
-          <span class="nav-label">{{ item.label }}</span>
-        </a>
-      }
-    </nav>
-
-  </aside>
-
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="top-header">
-      <div class="header-left">
-        <button class="menu-toggle" (click)="toggleSidebar()">
-          <span>☰</span>
-        </button>
-        <h2 class="page-title">مرحباً، {{ userFullName() }}</h2>
-      </div>
-
-      <div class="header-right">
-        <button class="icon-button" title="الإشعارات">
-          <span class="notification-badge">3</span>
-          🔔
-        </button>
-
-        <div class="user-menu-container">
-          <button class="user-avatar" (click)="toggleUserMenu()">
-            {{ userInitials() }}
-          </button>
-
-          @if (userMenuOpen()) {
-            <div class="user-menu">
-              <div class="user-menu-header">
-                <div class="user-avatar-large">{{ userInitials() }}</div>
-                <div class="user-info">
-                  <div class="user-name">{{ userFullName() }}</div>
-                  <div class="user-email">{{ userEmail() }}</div>
-                  @if (userRole()) {
-                    <div class="user-role">{{ userRole() }}</div>
-                  }
-                </div>
-              </div>
-
-              <div class="user-menu-items">
-                <a routerLink="/profile" class="user-menu-item">
-                  <span>👤</span> الملف الشخصي
-                </a>
-                <a routerLink="/settings" class="user-menu-item">
-                  <span>⚙️</span> الإعدادات
-                </a>
-                <button class="user-menu-item logout" (click)="logout()">
-                  <span>🚪</span> تسجيل الخروج
-                </button>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </header>
-
-    <!-- Page Content -->
-    <main class="page-content">
-      <router-outlet></router-outlet>
-    </main>
+  <!-- Page Content -->
+  <div class="page-content">
+    <router-outlet></router-outlet>
   </div>
-</div>
+</main>
 
-@if (userMenuOpen()) {
-  <div class="overlay user-menu-overlay" (click)="toggleUserMenu()"></div>
-}
-
-<!-- Sidebar Overlay for Mobile -->
+<!-- Overlay for Mobile -->
 @if (sidebarOpen() && isMobile()) {
-  <div class="overlay sidebar-overlay" (click)="closeSidebarOnMobile()"></div>
+  <div class="overlay" (click)="closeSidebarOnMobile()"></div>
 }

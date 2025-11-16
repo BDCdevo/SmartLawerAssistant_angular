@@ -1,0 +1,410 @@
+<div class="documents-container">
+  <!-- Compact Header -->
+  <div class="page-header-compact">
+    <h1 class="header-title">إدارة المستندات</h1>
+    <div class="header-actions">
+      <button class="action-btn btn-secondary" (click)="loadDocuments()" [disabled]="loading()">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button class="action-btn btn-primary" (click)="openUploadModal()">
+        <span class="btn-icon">➕</span>
+        <span>رفع مستند</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact Filters -->
+  <div class="filters-compact">
+    <!-- Search Group -->
+    <div class="search-group">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+        placeholder="🔍 ابحث عن مستند..."
+      />
+      <button class="search-btn" (click)="onSearch()">بحث</button>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="filter-group">
+      <select
+        [(ngModel)]="selectedCategory"
+        (change)="onFilterChange()"
+      >
+        @for (category of categories; track category.value) {
+          <option [value]="category.value">{{ category.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Case Filter -->
+    <div class="filter-group">
+      <select
+        [(ngModel)]="selectedCaseId"
+        (change)="onFilterChange()"
+      >
+        <option [ngValue]="null">كل القضايا</option>
+        @for (case of cases(); track case.id) {
+          <option [ngValue]="case.id">
+            {{ case.number ? (case.number + '/' + case.year) : ('قضية ' + case.id) }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- Client Filter -->
+    <div class="filter-group">
+      <select
+        [(ngModel)]="selectedClientId"
+        (change)="onFilterChange()"
+      >
+        <option [ngValue]="null">كل العملاء</option>
+        @for (client of clients(); track client.id) {
+          <option [ngValue]="client.id">{{ client.fullName }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Clear Filters -->
+    <button
+      class="clear-filters-btn"
+      (click)="searchQuery.set(''); selectedCategory.set(''); selectedCaseId.set(null); selectedClientId.set(null); onFilterChange()"
+    >
+      🗑️ مسح
+    </button>
+  </div>
+
+  <!-- Count Badge -->
+  <div class="count-badge" *ngIf="!loading()">
+    <span class="badge-icon">📊</span>
+    <span>المستندات: <span class="badge-number">{{ totalItems() }}</span></span>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading()">
+    <div class="spinner"></div>
+    <p class="loading-text">جاري تحميل المستندات...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading() && documents().length === 0">
+    <div class="empty-icon">📭</div>
+    <h3 class="empty-title">لا توجد مستندات</h3>
+    <p class="empty-description">لم يتم العثور على أي مستندات. قم برفع مستند جديد للبدء.</p>
+    <button class="action-btn btn-primary" (click)="openUploadModal()">
+      <span>➕</span>
+      <span>رفع مستند</span>
+    </button>
+  </div>
+
+  <!-- Documents Table -->
+  <div class="table-container" *ngIf="!loading() && documents().length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>رقم القضية</th>
+          <th>اسم الملف</th>
+          <th>الملف المخزن</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (document of documents(); track document.id) {
+          <tr [class.deleted-row]="document.deletedAt">
+            <td>{{ document.caseId || '-' }}</td>
+            <td class="filename-cell">{{ getOriginalFileName(document) }}</td>
+            <td>{{ getStoredFileName(document) }}</td>
+            <td class="actions-cell">
+              <button
+                class="action-btn btn-download"
+                (click)="downloadDocument(document)"
+                title="تحميل">
+                ⬇️
+              </button>
+              <button
+                class="action-btn btn-view"
+                (click)="openAnalysisModal(document)"
+                title="تحليل">
+                🔍
+              </button>
+              @if (!document.deletedAt) {
+                <button
+                  class="action-btn btn-delete"
+                  (click)="deleteDocument(document)"
+                  title="حذف">
+                  🗑️
+                </button>
+              } @else {
+                <button
+                  class="action-btn btn-restore"
+                  (click)="restoreDocument(document)"
+                  title="استرجاع">
+                  ↩️
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading() && documents().length > 0 && getTotalPages() > 1">
+    <div class="pagination-info">
+      عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+      <strong>{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+      من <strong>{{ totalItems() }}</strong> نتيجة
+    </div>
+    <div class="pagination-controls">
+      <button
+        class="page-btn prev-btn"
+        (click)="onPageChange(currentPage() - 1)"
+        [disabled]="currentPage() === 1">
+        «
+      </button>
+
+      @for (page of getPageNumbers(); track page) {
+        @if (page === -1) {
+          <span class="page-dots">...</span>
+        } @else {
+          <button
+            class="page-btn"
+            [class.active]="page === currentPage()"
+            (click)="onPageChange(page)">
+            {{ page }}
+          </button>
+        }
+      }
+
+      <button
+        class="page-btn next-btn"
+        (click)="onPageChange(currentPage() + 1)"
+        [disabled]="currentPage() === getTotalPages()">
+        »
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" *ngIf="showUploadModal()" (click)="closeUploadModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="modal-icon">⬆️</span>
+        <span>رفع مستند جديد</span>
+      </h2>
+      <button class="modal-close" (click)="closeUploadModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <!-- Case Select -->
+        <div class="form-group">
+          <label class="form-label">
+            القضية <span class="required">*</span>
+          </label>
+          <select [(ngModel)]="uploadCaseId" class="form-select">
+            <option [ngValue]="null">اختر القضية</option>
+            @for (case of cases(); track case.id) {
+              <option [ngValue]="case.id">
+                {{ case.number ? (case.number + '/' + case.year) : ('قضية رقم ' + case.id) }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- Title Input -->
+        <div class="form-group">
+          <label class="form-label">
+            عنوان المستند <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="uploadTitle"
+            placeholder="أدخل عنوان المستند"
+            class="form-input"
+          />
+        </div>
+
+        <!-- Category Select -->
+        <div class="form-group">
+          <label class="form-label">
+            الفئة <span class="required">*</span>
+          </label>
+          <select [(ngModel)]="uploadCategory" class="form-select">
+            <option value="">اختر الفئة</option>
+            @for (category of categories; track category.value) {
+              @if (category.value) {
+                <option [value]="category.value">{{ category.label }}</option>
+              }
+            }
+          </select>
+        </div>
+
+        <!-- File Input -->
+        <div class="form-group form-group-full">
+          <label class="form-label">
+            اختر ملف <span class="required">*</span>
+          </label>
+          <div class="file-input-wrapper">
+            <input
+              type="file"
+              id="fileInput"
+              (change)="onFileSelected($event)"
+              class="file-input"
+            />
+            <label for="fileInput" class="file-input-label">
+              <span class="file-icon">📎</span>
+              <span>{{ selectedFile() ? selectedFile()!.name : 'اختر ملف للرفع' }}</span>
+            </label>
+          </div>
+          @if (selectedFile()) {
+            <p class="file-info">
+              الحجم: {{ formatFileSize(selectedFile()!.size) }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeUploadModal()" [disabled]="uploading()">
+        إلغاء
+      </button>
+      <button
+        class="btn-primary"
+        (click)="uploadDocument()"
+        [disabled]="uploading() || !selectedFile()">
+        @if (uploading()) {
+          <span class="spinner-small"></span>
+          <span>جاري الرفع...</span>
+        } @else {
+          <span>⬆️</span>
+          <span>رفع المستند</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Analysis Modal -->
+<div class="modal-overlay" *ngIf="showAnalysisModal()" (click)="closeAnalysisModal()">
+  <div class="modal-content modal-analysis" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <span class="modal-icon">🤖</span>
+        <span>تحليل المستند بالذكاء الاصطناعي</span>
+      </h2>
+      <button class="modal-close" (click)="closeAnalysisModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+      @if (selectedDocumentForAnalysis()) {
+        <div class="analysis-document-info">
+          <div class="analysis-doc-icon">{{ getFileIcon(selectedDocumentForAnalysis()!.fileName) }}</div>
+          <div class="analysis-doc-details">
+            <h3>{{ selectedDocumentForAnalysis()!.title }}</h3>
+            <p>{{ selectedDocumentForAnalysis()!.fileName }}</p>
+          </div>
+        </div>
+      }
+
+      @if (analyzingDocument()) {
+        <div class="analysis-loading">
+          <div class="spinner"></div>
+          <p>جاري تحليل المستند...</p>
+        </div>
+      } @else if (documentAnalysis()) {
+        <div class="analysis-content">
+          <!-- Analysis Metadata -->
+          <div class="analysis-metadata">
+            <div class="metadata-item">
+              <span class="metadata-label">نوع التحليل:</span>
+              <span class="metadata-value">{{ documentAnalysis().analysisType || 'غير محدد' }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">النموذج المستخدم:</span>
+              <span class="metadata-value">{{ documentAnalysis().model || 'غير محدد' }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">الوضع:</span>
+              <span class="metadata-value">{{ documentAnalysis().mode || 'غير محدد' }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">تاريخ التحليل:</span>
+              <span class="metadata-value">{{ formatAnalysisDate(documentAnalysis().analyzedAtUtc) }}</span>
+            </div>
+          </div>
+
+          <!-- Summary Section -->
+          @if (documentAnalysis().summary) {
+            <div class="analysis-section">
+              <h4 class="analysis-section-title">📝 ملخص التحليل</h4>
+              <div class="analysis-text">
+                {{ documentAnalysis().summary }}
+              </div>
+            </div>
+          }
+
+          <!-- Content Markdown Section -->
+          @if (documentAnalysis().contentMarkdown) {
+            <div class="analysis-section">
+              <h4 class="analysis-section-title">📄 التحليل الكامل</h4>
+              <div class="analysis-markdown" [innerHTML]="documentAnalysis().contentMarkdown"></div>
+            </div>
+          }
+
+          <!-- Objections Section -->
+          @if (getObjections().length > 0) {
+            <div class="analysis-section">
+              <h4 class="analysis-section-title">⚖️ الاعتراضات والردود</h4>
+              <div class="objections-list">
+                @for (objection of getObjections(); track $index) {
+                  <div class="objection-item">
+                    <div class="objection-header">
+                      <span class="objection-number">#{{ $index + 1 }}</span>
+                      <h5 class="objection-title">{{ objection.objection || 'اعتراض' }}</h5>
+                    </div>
+                    @if (objection.reply) {
+                      <div class="objection-reply">
+                        <strong>الرد:</strong> {{ objection.reply }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="analysis-empty">
+          <div class="empty-icon">🤖</div>
+          <p>لم يتم تحليل هذا المستند بعد</p>
+          <button
+            class="btn-primary"
+            (click)="analyzeDocument(selectedDocumentForAnalysis()!)"
+            [disabled]="analyzingDocument()">
+            <span>🔍</span>
+            <span>بدء التحليل</span>
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer" *ngIf="documentAnalysis() && !analyzingDocument()">
+      <button
+        class="btn-secondary"
+        (click)="reanalyzeDocument(selectedDocumentForAnalysis()!)">
+        <span>🔄</span>
+        <span>إعادة التحليل</span>
+      </button>
+      <button class="btn-primary" (click)="closeAnalysisModal()">
+        إغلاق
+      </button>
+    </div>
+  </div>
+</div>

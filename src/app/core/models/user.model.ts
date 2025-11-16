@@ -8,13 +8,14 @@ export interface User {
   avatar?: string;
   createdAt: Date;
   lastLogin?: Date;
+  permissions?: string[];  // Dynamic permissions from JWT token
 }
 
 export enum UserRole {
   SUPER_ADMIN = 'SuperAdmin',
-  ADMIN = 'admin',
-  LAWYER = 'lawyer',
-  CLIENT = 'client',
+  ADMIN = 'Admin',
+  LAWYER = 'Lawyer',
+  VIEWER = 'Viewer',  // Changed from CLIENT to match backend
   ASSISTANT = 'assistant'
 }
 

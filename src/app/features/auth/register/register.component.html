@@ -44,13 +44,27 @@
 
       <div class="form-group">
         <label for="email">البريد الإلكتروني</label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          placeholder="example@email.com"
-          [class.invalid]="email?.invalid && email?.touched"
-        />
+        <div class="input-with-validation">
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="example@email.com"
+            [class.invalid]="email?.invalid && email?.touched"
+            [class.valid]="email?.valid && email?.touched && emailAvailable()"
+          />
+          @if (checkingEmail()) {
+            <span class="validation-spinner">⏳</span>
+          }
+          @if (!checkingEmail() && email?.touched && email?.valid) {
+            @if (emailAvailable() === true) {
+              <span class="validation-success">✓</span>
+            }
+            @if (emailAvailable() === false) {
+              <span class="validation-error">✗</span>
+            }
+          }
+        </div>
         @if (email?.invalid && email?.touched) {
           <span class="error-message">
             @if (email?.errors?.['required']) {
@@ -59,35 +73,63 @@
             @if (email?.errors?.['email']) {
               البريد الإلكتروني غير صحيح
             }
+            @if (email?.errors?.['emailTaken']) {
+              البريد الإلكتروني مستخدم بالفعل
+            }
           </span>
         }
       </div>
 
       <div class="form-group">
-        <label for="phone">رقم الهاتف</label>
-        <input
-          type="tel"
-          id="phone"
-          formControlName="phone"
-          placeholder="+20 123 456 7890"
-          [class.invalid]="phone?.invalid && phone?.touched"
-        />
-        @if (phone?.invalid && phone?.touched) {
-          <span class="error-message">رقم الهاتف مطلوب</span>
+        <label for="phoneNumber">رقم الهاتف</label>
+        <div class="input-with-validation">
+          <input
+            type="tel"
+            id="phoneNumber"
+            formControlName="phoneNumber"
+            placeholder="01012345678"
+            [class.invalid]="phoneNumber?.invalid && phoneNumber?.touched"
+            [class.valid]="phoneNumber?.valid && phoneNumber?.touched && phoneAvailable()"
+          />
+          @if (checkingPhone()) {
+            <span class="validation-spinner">⏳</span>
+          }
+          @if (!checkingPhone() && phoneNumber?.touched && phoneNumber?.valid) {
+            @if (phoneAvailable() === true) {
+              <span class="validation-success">✓</span>
+            }
+            @if (phoneAvailable() === false) {
+              <span class="validation-error">✗</span>
+            }
+          }
+        </div>
+        @if (phoneNumber?.invalid && phoneNumber?.touched) {
+          <span class="error-message">
+            @if (phoneNumber?.errors?.['required']) {
+              رقم الهاتف مطلوب
+            }
+            @if (phoneNumber?.errors?.['pattern']) {
+              رقم الهاتف يجب أن يبدأ بـ 010, 011, 012, أو 015
+            }
+            @if (phoneNumber?.errors?.['phoneTaken']) {
+              رقم الهاتف مستخدم بالفعل
+            }
+          </span>
         }
       </div>
 
       <div class="form-group">
-        <label for="role">نوع الحساب</label>
-        <select
-          id="role"
-          formControlName="role"
-          [class.invalid]="role?.invalid && role?.touched"
-        >
-          @for (roleOption of roles; track roleOption.value) {
-            <option [value]="roleOption.value">{{ roleOption.label }}</option>
-          }
-        </select>
+        <label for="city">المدينة</label>
+        <input
+          type="text"
+          id="city"
+          formControlName="city"
+          placeholder="أدخل المدينة"
+          [class.invalid]="city?.invalid && city?.touched"
+        />
+        @if (city?.invalid && city?.touched) {
+          <span class="error-message">المدينة مطلوبة</span>
+        }
       </div>
 
       <div class="form-row">

@@ -1,0 +1,161 @@
+<div class="ai-model-settings-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="page-title">
+          <span class="title-icon">🤖</span>
+          <span>إدارة نماذج الذكاء الاصطناعي</span>
+        </h1>
+        <p class="page-subtitle">
+          اختر وتحكم في نموذج الذكاء الاصطناعي المستخدم في النظام
+        </p>
+      </div>
+      <button class="btn-refresh" (click)="loadModels()" [disabled]="loading()">
+        <span class="refresh-icon" [class.spinning]="loading()">↻</span>
+        <span>تحديث</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Current Active Model Banner -->
+  <div class="current-model-section" *ngIf="currentModelName()">
+    <div class="current-model-card">
+      <div class="model-status">
+        <span class="status-badge active">
+          <span class="pulse-dot"></span>
+          نشط الآن
+        </span>
+      </div>
+      <div class="model-info">
+        <h3 class="model-label">النموذج الحالي</h3>
+        <p class="model-name">{{ currentModelName() }}</p>
+        <p class="model-source" *ngIf="currentModelDetails()">
+          المصدر: <strong>{{ currentModelDetails()?.source || 'Config' }}</strong>
+        </p>
+      </div>
+      <div class="model-icon-large">
+        💎
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="loading()">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    <p class="loading-text">جاري تحميل النماذج المتاحة...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-section" *ngIf="!loading() && models().length === 0">
+    <div class="empty-icon">📭</div>
+    <h3 class="empty-title">لا توجد نماذج متاحة</h3>
+    <p class="empty-description">لم نتمكن من العثور على أي نماذج ذكاء اصطناعي متاحة في الوقت الحالي</p>
+    <button class="btn-primary" (click)="loadModels()">
+      <span>↻</span>
+      <span>إعادة المحاولة</span>
+    </button>
+  </div>
+
+  <!-- Models Grid -->
+  <div class="models-section" *ngIf="!loading() && models().length > 0">
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="title-icon">📚</span>
+        <span>النماذج المتاحة ({{ models().length }})</span>
+      </h2>
+      <p class="section-subtitle">{{ models().length }} نموذج متاح</p>
+    </div>
+
+    <div class="models-grid">
+      <div
+        *ngFor="let model of models()"
+        class="model-card"
+        [class.selected]="isSelectedModel(model.id)"
+        [class.current]="isCurrentModel(model.id)"
+        (click)="selectModel(model.id)">
+
+        <!-- Model Badge -->
+        <div class="model-badges">
+          <span class="badge badge-current" *ngIf="isCurrentModel(model.id)">
+            ✓ الافتراضي
+          </span>
+          <span class="badge badge-selected" *ngIf="isSelectedModel(model.id) && !isCurrentModel(model.id)">
+            ◉ محدد
+          </span>
+        </div>
+
+        <!-- Model Header -->
+        <div class="model-header">
+          <div class="model-icon">
+            {{ getProviderIcon(model.provider) }}
+          </div>
+          <div class="model-details">
+            <h3 class="model-title">{{ model.name }}</h3>
+            <p class="model-provider">{{ model.provider || 'Unknown' }}</p>
+          </div>
+        </div>
+
+        <!-- Model Description -->
+        <p class="model-description" *ngIf="model.description">
+          {{ model.description }}
+        </p>
+
+        <!-- Model Capabilities -->
+        <div class="model-capabilities" *ngIf="model.capabilities && model.capabilities.length > 0">
+          <div class="capabilities-label">القدرات:</div>
+          <div class="capabilities-tags">
+            <span class="capability-tag" *ngFor="let capability of model.capabilities">
+              {{ capability }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Model Footer -->
+        <div class="model-footer">
+          <div class="select-indicator" *ngIf="!isCurrentModel(model.id)">
+            <span class="indicator-icon">{{ isSelectedModel(model.id) ? '◉' : '○' }}</span>
+            <span class="indicator-text">{{ isSelectedModel(model.id) ? 'تم التحديد' : 'انقر للتحديد' }}</span>
+          </div>
+          <div class="current-indicator" *ngIf="isCurrentModel(model.id)">
+            <span class="check-icon">✓</span>
+            <span>النموذج الافتراضي</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-section">
+      <button
+        class="btn-primary btn-large"
+        [disabled]="!selectedModelId() || isCurrentModel(selectedModelId()!) || loading()"
+        (click)="setAsDefault()">
+        <span class="btn-icon">✓</span>
+        <span>تعيين كنموذج افتراضي</span>
+      </button>
+
+      <button
+        class="btn-secondary btn-large"
+        [disabled]="loading()"
+        (click)="loadModels()">
+        <span class="btn-icon">↻</span>
+        <span>تحديث القائمة</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Test Data Section (for development) -->
+  <div class="test-section" *ngIf="!isTestMode()">
+    <button class="btn-test" (click)="addTestModels()">
+      🧪 تحميل نماذج تجريبية
+    </button>
+  </div>
+  <div class="test-section" *ngIf="isTestMode()">
+    <button class="btn-test" (click)="loadModels()">
+      🌐 تحميل من API الحقيقي
+    </button>
+  </div>
+</div>

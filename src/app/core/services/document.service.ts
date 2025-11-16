@@ -67,6 +67,14 @@ export class DocumentService {
     return this.http.get<Document[]>(`${this.apiUrl}/case/${caseId}`);
   }
 
+  /**
+   * Get documents by case ID using POST method (for AI features)
+   * Endpoint: /api/documents/list-by-case
+   */
+  getDocumentsByCasePost(searchDto: { caseId: number }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/list-by-case`, searchDto);
+  }
+
   getDocumentsByClient(clientId: string): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.apiUrl}/client/${clientId}`);
   }

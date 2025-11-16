@@ -1,21 +1,62 @@
-<div class="dashboard-container">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="header-content">
-      <h1>لوحة التحكم</h1>
-      <p>مرحباً بك في نظام إدارة المكتب القانوني</p>
+<section class="dashboard-container">
+  <!-- Welcome Hero Section -->
+  <div class="welcome-hero">
+    <div class="hero-content">
+      <div class="hero-brand">
+        <img [src]="logoPath" alt="Smart Lawyer Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1 class="brand-title">المحامي الذكي</h1>
+          <p class="brand-subtitle">Smart Lawyer Assistant</p>
+        </div>
+      </div>
+
+      <div class="hero-info">
+        <div class="typewriter-box">
+          <span class="typewriter-icon">⚡</span>
+          <span class="typewriter-text">{{ typedText() }}</span>
+          <span class="cursor">|</span>
+        </div>
+
+        <button class="refresh-btn" (click)="loadDashboardData()" [disabled]="loading()">
+          <span class="refresh-icon">🔄</span>
+          <span>تحديث</span>
+        </button>
+      </div>
     </div>
-    <button class="refresh-btn" (click)="loadDashboardData()" [disabled]="loading()">
-      <span class="refresh-icon">🔄</span>
-      تحديث البيانات
-    </button>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-item stat-primary">
+        <div class="stat-icon">⚖️</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats().totalCases }}</div>
+          <div class="stat-label">ملف قضائي</div>
+        </div>
+      </div>
+
+      <div class="stat-item stat-success">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats().totalClients }}</div>
+          <div class="stat-label">موكل مسجل</div>
+        </div>
+      </div>
+
+      <div class="stat-item stat-warning">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats().upcomingHearings }}</div>
+          <div class="stat-label">موعد مقبل</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   @if (loading()) {
     <div class="loading-overlay">
       <div class="spinner-container">
         <div class="spinner"></div>
-        <p>جاري تحميل البيانات...</p>
+        <p>جارٍ تحميل البيانات، يُرجى الانتظار...</p>
       </div>
     </div>
   }
@@ -24,7 +65,7 @@
     <div class="error-message">
       <span class="error-icon">⚠️</span>
       <div class="error-content">
-        <h3>حدث خطأ</h3>
+        <h3>عذراً، حدث خطأ</h3>
         <p>{{ error() }}</p>
       </div>
       <button class="retry-btn" (click)="loadDashboardData()">إعادة المحاولة</button>
@@ -297,4 +338,4 @@
       </div>
     }
   }
-</div>
+</section>

@@ -1,0 +1,229 @@
+<div class="rbac-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">إدارة الصلاحيات والأدوار</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateRoleModal()">
+        ➕ إنشاء دور جديد
+      </button>
+      <button class="btn btn-secondary" (click)="openUserRoleModal()">
+        👤 تعيين دور لمستخدم
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button
+      class="tab"
+      [class.active]="activeTab() === 'roles'"
+      (click)="switchTab('roles')"
+    >
+      🔐 الأدوار
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab() === 'permissions'"
+      (click)="switchTab('permissions')"
+    >
+      🔑 إدارة الصلاحيات
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>جاري التحميل...</p>
+    </div>
+  }
+
+  <!-- Roles Tab -->
+  @if (activeTab() === 'roles' && !loading()) {
+    <div class="roles-section">
+      <div class="roles-list">
+        <h2 class="section-title">الأدوار المتاحة</h2>
+        @if (roles().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">🔐</span>
+            <p>لا توجد أدوار</p>
+          </div>
+        } @else {
+          <div class="roles-grid">
+            @for (role of roles(); track role.id) {
+              <div
+                class="role-card"
+                [class.selected]="selectedRole()?.id === role.id"
+                (click)="selectRole(role)"
+              >
+                <div class="role-icon">🔐</div>
+                <div class="role-name">{{ role.name }}</div>
+                @if (role.description) {
+                  <div class="role-description">{{ role.description }}</div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Permissions Tab -->
+  @if (activeTab() === 'permissions' && !loading()) {
+    <div class="permissions-section">
+      @if (!selectedRole()) {
+        <div class="empty-state">
+          <span class="empty-icon">🔑</span>
+          <p>الرجاء اختيار دور من قائمة الأدوار</p>
+        </div>
+      } @else {
+        <div class="permissions-content">
+          <h2 class="section-title">
+            إدارة صلاحيات الدور: <span class="highlight">{{ selectedRole()!.name }}</span>
+          </h2>
+
+          <div class="permissions-grid">
+            <!-- Current Permissions -->
+            <div class="permissions-box">
+              <h3 class="box-title">الصلاحيات الحالية</h3>
+              @if (rolePermissions().length === 0) {
+                <div class="empty-message">
+                  <p>لا توجد صلاحيات لهذا الدور</p>
+                </div>
+              } @else {
+                <div class="permissions-list">
+                  @for (permission of rolePermissions(); track permission.id) {
+                    <div class="permission-item has-permission">
+                      <div class="permission-info">
+                        <div class="permission-name">✅ {{ permission.name }}</div>
+                        <div class="permission-key">{{ permission.key }}</div>
+                      </div>
+                      <button
+                        class="btn-icon btn-remove"
+                        (click)="revokePermission(permission)"
+                        title="إلغاء الصلاحية"
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Available Permissions -->
+            <div class="permissions-box">
+              <h3 class="box-title">الصلاحيات المتاحة</h3>
+              @if (availablePermissions().length === 0) {
+                <div class="empty-message">
+                  <p>تم منح جميع الصلاحيات لهذا الدور</p>
+                </div>
+              } @else {
+                <div class="permissions-list">
+                  @for (permission of availablePermissions(); track permission.id) {
+                    <div class="permission-item">
+                      <div class="permission-info">
+                        <div class="permission-name">{{ permission.name }}</div>
+                        <div class="permission-key">{{ permission.key }}</div>
+                      </div>
+                      <button
+                        class="btn-icon btn-add"
+                        (click)="grantPermission(permission)"
+                        title="منح الصلاحية"
+                      >
+                        ➕
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Create Role Modal -->
+@if (showRoleModal()) {
+  <div class="modal-overlay" (click)="closeRoleModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>إنشاء دور جديد</h2>
+        <button class="modal-close" (click)="closeRoleModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label required">اسم الدور</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="newRoleName()"
+            (input)="newRoleName.set($any($event.target).value)"
+            placeholder="مثال: Manager"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeRoleModal()">
+          إلغاء
+        </button>
+        <button class="btn btn-primary" (click)="createRole()" [disabled]="loading()">
+          {{ loading() ? 'جاري الإنشاء...' : 'إنشاء' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Assign Role to User Modal -->
+@if (showUserRoleModal()) {
+  <div class="modal-overlay" (click)="closeUserRoleModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>تعيين دور لمستخدم</h2>
+        <button class="modal-close" (click)="closeUserRoleModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label required">معرف المستخدم (User ID)</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="userIdForRole()"
+            (input)="userIdForRole.set($any($event.target).value)"
+            placeholder="أدخل معرف المستخدم"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">الدور</label>
+          <select
+            class="form-input"
+            [value]="selectedRoleForUser()"
+            (change)="selectedRoleForUser.set($any($event.target).value)"
+          >
+            <option value="">اختر الدور</option>
+            @for (role of roles(); track role.id) {
+              <option [value]="role.name">{{ role.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeUserRoleModal()">
+          إلغاء
+        </button>
+        <button class="btn btn-primary" (click)="assignRoleToUser()" [disabled]="loading()">
+          {{ loading() ? 'جاري التعيين...' : 'تعيين' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

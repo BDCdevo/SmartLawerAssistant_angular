@@ -1,0 +1,196 @@
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">الإعدادات</h1>
+      <p class="text-gray-600">إدارة تفضيلات الحساب والإشعارات</p>
+    </div>
+
+    <!-- Password Change Section -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">تغيير كلمة المرور</h2>
+
+      <!-- Password Success Alert -->
+      <div *ngIf="passwordSuccess()" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-green-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-green-800 text-sm">{{ passwordSuccess() }}</span>
+        </div>
+      </div>
+
+      <!-- Password Error Alert -->
+      <div *ngIf="passwordError()" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-red-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-red-800 text-sm">{{ passwordError() }}</span>
+        </div>
+      </div>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()">
+        <div class="space-y-4">
+          <!-- Current Password -->
+          <div>
+            <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-2">
+              كلمة المرور الحالية
+            </label>
+            <input
+              type="password"
+              id="currentPassword"
+              formControlName="currentPassword"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              [class.border-red-500]="currentPassword?.invalid && currentPassword?.touched"
+            />
+            <p *ngIf="currentPassword?.invalid && currentPassword?.touched" class="mt-1 text-sm text-red-600">
+              كلمة المرور الحالية مطلوبة
+            </p>
+          </div>
+
+          <!-- New Password -->
+          <div>
+            <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">
+              كلمة المرور الجديدة
+            </label>
+            <input
+              type="password"
+              id="newPassword"
+              formControlName="newPassword"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              [class.border-red-500]="newPassword?.invalid && newPassword?.touched"
+            />
+            <p *ngIf="newPassword?.invalid && newPassword?.touched" class="mt-1 text-sm text-red-600">
+              <span *ngIf="newPassword?.errors?.['required']">كلمة المرور الجديدة مطلوبة</span>
+              <span *ngIf="newPassword?.errors?.['minlength']">كلمة المرور يجب أن تكون 6 أحرف على الأقل</span>
+            </p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div>
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+              تأكيد كلمة المرور
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              [class.border-red-500]="(confirmPassword?.invalid && confirmPassword?.touched) || passwordForm.errors?.['mismatch']"
+            />
+            <p *ngIf="confirmPassword?.invalid && confirmPassword?.touched" class="mt-1 text-sm text-red-600">
+              تأكيد كلمة المرور مطلوب
+            </p>
+            <p *ngIf="passwordForm.errors?.['mismatch'] && confirmPassword?.touched" class="mt-1 text-sm text-red-600">
+              كلمة المرور غير متطابقة
+            </p>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6 flex justify-end">
+          <button
+            type="submit"
+            [disabled]="savingPassword() || passwordForm.invalid"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          >
+            <span *ngIf="savingPassword()" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></span>
+            {{ savingPassword() ? 'جاري الحفظ...' : 'تغيير كلمة المرور' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Notification Settings Section -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">إعدادات الإشعارات</h2>
+
+      <!-- Notification Success Alert -->
+      <div *ngIf="notificationSuccess()" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-green-400 ml-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-green-800 text-sm">{{ notificationSuccess() }}</span>
+        </div>
+      </div>
+
+      <form [formGroup]="notificationForm" (ngSubmit)="onNotificationSubmit()">
+        <div class="space-y-4">
+          <!-- Email Notifications -->
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">إشعارات البريد الإلكتروني</h3>
+              <p class="text-sm text-gray-500">تلقي الإشعارات عبر البريد الإلكتروني</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="emailNotifications" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- SMS Notifications -->
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">إشعارات الرسائل النصية</h3>
+              <p class="text-sm text-gray-500">تلقي الإشعارات عبر الرسائل النصية</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="smsNotifications" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Case Updates -->
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">تحديثات القضايا</h3>
+              <p class="text-sm text-gray-500">إشعارات عند تحديث حالة القضايا</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="caseUpdates" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Appointment Reminders -->
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">تذكير بالمواعيد</h3>
+              <p class="text-sm text-gray-500">تلقي تذكيرات قبل المواعيد المحددة</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="appointmentReminders" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Document Alerts -->
+          <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">تنبيهات المستندات</h3>
+              <p class="text-sm text-gray-500">إشعارات عند إضافة أو تحديث مستندات</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" formControlName="documentAlerts" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-6 flex justify-end">
+          <button
+            type="submit"
+            [disabled]="savingNotifications()"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          >
+            <span *ngIf="savingNotifications()" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></span>
+            {{ savingNotifications() ? 'جاري الحفظ...' : 'حفظ الإعدادات' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

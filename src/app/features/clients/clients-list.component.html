@@ -1,0 +1,164 @@
+<div class="page-container">
+  <!-- Compact Header -->
+  <div class="page-header-compact">
+    <h1 class="header-title">إدارة العملاء</h1>
+    <div class="header-actions">
+      <button class="action-btn btn-secondary" (click)="loadClients()" [disabled]="loading()">
+        <span class="btn-icon" [class.spinning]="loading()">🔄</span>
+        <span>تحديث</span>
+      </button>
+      <button class="action-btn btn-primary" (click)="openCreateModal()">
+        <span class="btn-icon">➕</span>
+        <span>إضافة عميل</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Compact Filters - Single Row -->
+  <div class="filters-compact">
+    <div class="search-group">
+      <input type="text" placeholder="🔍 بحث عن عميل..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value); loadClients()">
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading"><div class="spinner"></div><p>جاري تحميل العملاء...</p></div>
+  }
+
+  @if (!loading()) {
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الاسم الكامل</th>
+          <th>الرقم القومي</th>
+          <th>الهاتف</th>
+          <th>البريد الإلكتروني</th>
+          <th>الجنس</th>
+          <th>المهنة</th>
+          <th>الحالة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (clients().length === 0) {
+          <tr>
+            <td colspan="9" class="empty-cell">
+              <div class="empty-state">
+                <span class="empty-icon">👥</span>
+                <p>لا يوجد عملاء</p>
+              </div>
+            </td>
+          </tr>
+        }
+        @for (client of clients(); track client.id) {
+          <tr [class.deleted-row]="!client.isActive">
+            <td>{{ client.id }}</td>
+            <td class="name-cell">{{ client.fullName }}</td>
+            <td>{{ client.nationalId || '-' }}</td>
+            <td>{{ client.phone || '-' }}</td>
+            <td>{{ client.email || '-' }}</td>
+            <td>{{ client.gender === 'Male' ? 'ذكر' : (client.gender === 'Female' ? 'أنثى' : '-') }}</td>
+            <td>{{ client.profession || '-' }}</td>
+            <td><span [class]="client.isActive ? 'badge-active' : 'badge-inactive'">{{ client.isActive ? 'نشط' : 'غير نشط' }}</span></td>
+            <td class="actions-cell">
+              <button class="action-btn btn-edit" (click)="openEditModal(client)" title="تعديل">✏️</button>
+              @if (client.isActive) {
+                <button class="action-btn btn-delete" (click)="delete(client.id, client.fullName)" title="حذف">🗑️</button>
+              } @else {
+                <button class="action-btn btn-restore" (click)="restore(client.id)" title="استرجاع">♻️</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination-container">
+        <div class="pagination-info">
+          عرض <strong>{{ (currentPage() - 1) * pageSize() + 1 }}</strong> -
+          <strong>{{ Math.min(currentPage() * pageSize(), totalItems()) }}</strong>
+          من <strong>{{ totalItems() }}</strong> عميل
+        </div>
+        <div class="pagination-controls">
+          <button class="page-btn prev-btn" (click)="previousPage()" [disabled]="currentPage() === 1">السابق</button>
+          @for (page of pages; track page) {
+            <button class="page-btn" [class.active]="page === currentPage()" (click)="goToPage(page)">{{ page }}</button>
+          }
+          <button class="page-btn next-btn" (click)="nextPage()" [disabled]="currentPage() === totalPages">التالي</button>
+        </div>
+      </div>
+    }
+  }
+
+  @if (showModal()) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ isEditMode() ? 'تعديل عميل' : 'إضافة عميل جديد' }}</h2>
+          <button (click)="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>الاسم الكامل *</label>
+            <input type="text" [value]="formData().fullName" (input)="updateField('fullName', $any($event.target).value)" placeholder="الاسم الكامل">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>الرقم القومي</label>
+              <input type="number" [value]="formData().nationalId" (input)="updateField('nationalId', +$any($event.target).value || undefined)" placeholder="الرقم القومي">
+            </div>
+            <div class="form-group">
+              <label>الهاتف</label>
+              <input type="text" [value]="formData().phone" (input)="updateField('phone', $any($event.target).value)" placeholder="رقم الهاتف">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>البريد الإلكتروني</label>
+            <input type="email" [value]="formData().email" (input)="updateField('email', $any($event.target).value)" placeholder="البريد الإلكتروني">
+          </div>
+          <div class="form-group">
+            <label>العنوان</label>
+            <textarea rows="2" [value]="formData().address" (input)="updateField('address', $any($event.target).value)" placeholder="العنوان الكامل"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>الجنس</label>
+              <select [value]="formData().gender" (change)="updateField('gender', $any($event.target).value)">
+                @for (option of genderOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>الحالة الاجتماعية</label>
+              <select [value]="formData().maritalStatus" (change)="updateField('maritalStatus', $any($event.target).value)">
+                @for (option of maritalStatusOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>المهنة</label>
+            <input type="text" [value]="formData().profession" (input)="updateField('profession', $any($event.target).value)" placeholder="المهنة">
+          </div>
+          <div class="form-group">
+            <label>تاريخ الميلاد</label>
+            <input type="date" [value]="formData().dateOfBirth" (input)="updateField('dateOfBirth', $any($event.target).value)">
+          </div>
+          @if (isEditMode()) {
+            <div class="form-group">
+              <label><input type="checkbox" [checked]="formData().isActive" (change)="updateField('isActive', $any($event.target).checked)"> نشط</label>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="closeModal()">إلغاء</button>
+          <button class="btn-primary" (click)="save()" [disabled]="loading()">{{ loading() ? 'جاري الحفظ...' : 'حفظ' }}</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
