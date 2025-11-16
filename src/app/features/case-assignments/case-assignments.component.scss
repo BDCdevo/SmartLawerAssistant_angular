@@ -1,5 +1,5 @@
 // Import Shared Table Styles
-@import '../../shared/styles/shared-table-styles.scss';
+@use '../../shared/styles/shared-table-styles.scss' as *;
 
 .assignments-container {
   padding: 1.5rem;
