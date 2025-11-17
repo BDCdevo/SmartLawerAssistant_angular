@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://mohami.bdcbiz.com',
-  signalRHub: 'https://mohami.bdcbiz.com/notificationHub',
+  apiUrl: 'https://app.mohami.app',
+  signalRHub: 'https://app.mohami.app/notificationHub',
   appName: 'Smart Lawyer Portal',
   version: '1.0.0'
 };

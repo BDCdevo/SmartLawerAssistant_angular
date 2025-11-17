@@ -1,12 +1,12 @@
 {
   "/api": {
-    "target": "https://mohami.bdcbiz.com",
+    "target": "https://app.mohami.app",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/notificationHub": {
-    "target": "https://mohami.bdcbiz.com",
+    "target": "https://app.mohami.app",
     "secure": false,
     "changeOrigin": true,
     "ws": true,
